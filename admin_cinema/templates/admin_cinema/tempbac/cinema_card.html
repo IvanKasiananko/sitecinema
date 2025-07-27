@@ -1,0 +1,9 @@
+{% extends 'admin_base.html'%}
+{% block content%}
+{% include 'admin_cinema/include/descr.html' with Name='Названиt кинотеатра' %}
+  <form action="{% url 'hall' %}" >
+   <button>Создание зала</button>
+  </form>
+{% include 'admin_cinema/include/seo.html' %}
+
+{% endblock %}

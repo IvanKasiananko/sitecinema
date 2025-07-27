@@ -1,0 +1,180 @@
+{% extends 'admin_base.html' %}
+{% load static %}
+
+{% block content %}
+<style>
+  .cinema-block {
+    border: 1px solid #ddd;
+    padding: 20px;
+    margin-bottom: 20px;
+    border-radius: 6px;
+    background: #fff;
+  }
+  .cinema-block h3 {
+    margin-top: 0;
+    font-size: 18px;
+    color: #333;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 5px;
+  }
+  .form-field {
+    margin-bottom: 10px;
+  }
+  .form-field label {
+    display: block;
+    font-weight: bold;
+    margin-bottom: 3px;
+  }
+  .logo-section {
+    margin-top: 10px;
+  }
+  .logo-preview {
+    display: block;
+    margin-top: 5px;
+    max-width: 120px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+  }
+  .logo-buttons {
+    margin-top: 5px;
+  }
+  .logo-buttons button {
+    margin-right: 5px;
+  }
+</style>
+
+<h1>Управление кинотеатрами</h1>
+
+<form method="post" enctype="multipart/form-data" id="cinema-form">
+  {% csrf_token %}
+  <input type="hidden" name="form-TOTAL_FORMS" id="id_form-TOTAL_FORMS" value="{{ total_forms }}">
+
+  <div id="forms-container">
+    {% for cinema_form, seo_form, cinema_instance in cinema_forms %}
+      <div class="cinema-block">
+        {% if cinema_instance %}
+          <h3>Редактировать кинотеатр: {{ cinema_instance.name_cinema }}</h3>
+          <input type="hidden" name="{{ cinema_form.prefix }}-id" value="{{ cinema_instance.id }}">
+        {% else %}
+          <h3>Новый кинотеатр</h3>
+        {% endif %}
+
+        <div class="form-field">
+          {{ cinema_form.name_cinema.label_tag }}
+          {{ cinema_form.name_cinema }}
+        </div>
+
+        <div class="form-field">
+          {{ cinema_form.adress.label_tag }}
+          {{ cinema_form.adress }}
+        </div>
+
+        <div class="form-field">
+          {{ cinema_form.coord.label_tag }}
+          {{ cinema_form.coord }}
+        </div>
+
+        <div class="logo-section">
+          <label>Лого:</label>
+          <img src="{% if cinema_instance and cinema_instance.logo %}{{ cinema_instance.logo.url }}{% else %}{% static 'placeholder.png' %}{% endif %}" alt="Лого" class="logo-preview" id="logo-preview-{{ cinema_form.prefix }}">
+
+          <div class="logo-buttons">
+            <input type="file" name="{{ cinema_form.prefix }}-logo" id="logo-input-{{ cinema_form.prefix }}" style="display:none;" onchange="previewLogo(this, '{{ cinema_form.prefix }}')">
+            <button type="button" onclick="document.getElementById('logo-input-{{ cinema_form.prefix }}').click();">Добавить</button>
+            <button type="button" onclick="deleteLogo('{{ cinema_form.prefix }}')">Удалить</button>
+          </div>
+        </div>
+      {% if not cinema_instance %}
+        <h4>SEO блок</h4>
+        {% for field in seo_form %}
+          <div class="form-field">
+            {{ field.label_tag }}
+            {{ field }}
+          </div>
+        {% endfor %}
+        {% endif %}
+      </div>
+    {% endfor %}
+  </div>
+
+  <button type="button" id="add-cinema-btn">Добавить еще кинотеатр</button>
+  <button type="submit">Сохранить все изменения</button>
+</form>
+
+<script>
+function previewLogo(input, prefix) {
+  const preview = document.getElementById('logo-preview-' + prefix);
+  if (input.files && input.files[0]) {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      preview.src = e.target.result;
+      preview.style.display = 'block';
+    };
+    reader.readAsDataURL(input.files[0]);
+  }
+}
+
+function deleteLogo(prefix) {
+  const preview = document.getElementById('logo-preview-' + prefix);
+  preview.src = "{% static 'placeholder.png' %}";
+  const input = document.getElementById('logo-input-' + prefix);
+  input.value = "";
+
+  // Добавляем hidden input для удаления на сервере
+  let deleteInput = document.getElementById('delete-logo-input-' + prefix);
+  if (!deleteInput) {
+    deleteInput = document.createElement('input');
+    deleteInput.type = 'hidden';
+    deleteInput.name = prefix + '-delete_logo';
+    deleteInput.value = 'on';
+    deleteInput.id = 'delete-logo-input-' + prefix;
+    input.parentNode.appendChild(deleteInput);
+  }
+}
+
+let formIndex = {{ total_forms }};
+
+document.getElementById('add-cinema-btn').addEventListener('click', function() {
+  const container = document.getElementById('forms-container');
+  const firstForm = container.querySelector('.cinema-block');
+  const newForm = firstForm.cloneNode(true);
+
+  // Очистка полей
+  newForm.querySelectorAll('input, textarea').forEach(el => {
+    if (el.type !== 'hidden' && el.type !== 'checkbox' && el.type !== 'file') el.value = '';
+    if (el.type === 'checkbox') el.checked = false;
+    if (el.type === 'file') el.value = null;
+  });
+
+  // Обновляем лого на placeholder
+  const preview = newForm.querySelector('.logo-preview');
+  preview.src = "{% static 'placeholder.png' %}";
+
+  // Убираем hidden delete input
+  const deleteInput = newForm.querySelector('[id^="delete-logo-input-"]');
+  if (deleteInput) deleteInput.remove();
+
+  // Обновляем prefix в name и id
+  newForm.querySelectorAll('[name]').forEach(el => {
+    el.name = el.name.replace(/cinema-\d+/, `cinema-${formIndex}`).replace(/seo-\d+/, `seo-${formIndex}`);
+  });
+
+  newForm.querySelectorAll('[id]').forEach(el => {
+    el.id = el.id.replace(/cinema-\d+/, `cinema-${formIndex}`).replace(/seo-\d+/, `seo-${formIndex}`);
+  });
+
+  // Меняем заголовок
+  const h3 = newForm.querySelector('h3');
+  if (h3) h3.innerText = 'Новый кинотеатр';
+
+  // Убираем hidden поле id
+  const idField = newForm.querySelector(`input[name="cinema-${formIndex}-id"]`);
+  if (idField) idField.remove();
+
+  container.appendChild(newForm);
+  document.getElementById('id_form-TOTAL_FORMS').value = formIndex + 1;
+  formIndex++;
+});
+</script>
+
+{% endblock %}

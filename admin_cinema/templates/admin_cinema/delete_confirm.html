@@ -1,0 +1,13 @@
+{% extends 'admin_base.html'%}
+{% load static %}
+{% block content%}
+<div>
+    <h1>  Удаление </h1>
+    <form method="post">
+        {% csrf_token %}
+        <button type="submit">Удалить</button>
+
+    </form>
+</div>
+
+{% endblock %}

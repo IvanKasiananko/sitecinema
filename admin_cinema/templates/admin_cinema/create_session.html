@@ -1,0 +1,94 @@
+{% extends 'admin_base.html' %}
+
+{% block content %}
+<h3>Генерация сеансов</h3>
+<input type="number" id="sessionCount" placeholder="Количество сеансов" value="20">
+<button id="generateBtn">Сгенерировать</button>
+
+<h2>Добавить сеанс фильма</h2>
+
+<form method="post" id="sessionForm">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Сохранить</button>
+</form>
+
+<hr>
+
+<h3>Все сеансы</h3>
+<table border="1" cellpadding="5" cellspacing="0">
+    <thead>
+        <tr>
+            <th>Дата</th>
+            <th>Время</th>
+            <th>Фильм</th>
+            <th>Тип</th>
+            <th>Кинотеатр</th>
+            <th>Зал</th>
+            <th>Цена</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for session in sessions %}
+        <tr>
+            <td>{{ session.date_session }}</td>
+            <td>{{ session.time_session }}</td>
+            <td>{{ session.film.name }}</td>
+            <td>{{ session.type_film }}</td>
+            <td>{{ session.hall.cinema }}</td>
+            <td>{{ session.hall.name_hall_uk }}</td>
+            <td>{{ session.price }}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="7">Сеансов пока нет</td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<!-- Подключаем jQuery -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<script>
+$(document).ready(function() {
+    $("#id_cinema").change(function() {
+        var cinemaId = $(this).val();
+        if (cinemaId) {
+            $.ajax({
+                url: "{% url 'ajax_load_halls' %}",
+                data: {
+                    'cinema_id': cinemaId
+                },
+                success: function(data) {
+                    $("#id_hall").html(data);
+                }
+            });
+        } else {
+            $("#id_hall").html('<option value="">---------</option>');
+        }
+    });
+
+    $("#generateBtn").click(function() {
+        var count = $("#sessionCount").val();
+        if (count > 0) {
+            $.ajax({
+                url: "{% url 'generate_sessions' %}",
+                type: "POST",
+                data: {
+                    'count': count,
+                    'csrfmiddlewaretoken': '{{ csrf_token }}'
+                },
+                success: function(response) {
+                    alert("Сгенерировано сеансов: " + response.generated);
+                    location.reload(); // обновляем страницу для отображения
+                },
+                error: function(xhr, status, error) {
+                    alert("Ошибка генерации: " + error);
+                }
+            });
+        } else {
+            alert("Введите количество больше нуля");
+        }
+    });
+});
+</script>
+{% endblock %}

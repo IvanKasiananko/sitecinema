@@ -1,0 +1,127 @@
+{% extends 'cinema_base.html' %}
+
+{% block content %}
+
+<style>
+    .container {
+        padding: 0 40px; /* отступы слева и справа */
+    }
+
+    .film-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 200px); /* именно 4 колонки по 200px */
+        justify-content: center; /* центрируем весь блок по горизонтали */
+        gap: 30px;
+    }
+
+
+    .film-card {
+    width: 200px;
+    text-align: center;
+    border: 1px solid #ddd;
+    padding: 10px;
+    border-radius: 8px;
+    background-color: white; /* ✅ белая подложка */
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); /* 💡 мягкая тень */
+}
+
+    .film-card img {
+        width: 100%;
+        height: 250px;
+        object-fit: cover;
+        border-radius: 4px;
+    }
+
+    .film-card button {
+        background-color: olive; /* оливковый цвет кнопки */
+        color: white;
+        font-size: 16px; /* увеличенный размер шрифта */
+        padding: 10px 20px; /* увеличенные отступы */
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        margin-top: 10px;
+    }
+
+    .film-card button:hover {
+        background-color: #808000; /* темнее при наведении */
+    }
+
+    body {
+        margin: 0;
+        font-family: Arial, sans-serif;
+    {
+    % if banner_fon and banner_fon . image_back %
+    } background-image: url("{{ banner_fon.image_back.url }}");
+        background-size: cover;
+        background-repeat: no-repeat;
+        background-position: center center;
+    {
+    % endif %
+    }
+    }
+
+    @media (max-width: 1024px) {
+        .film-grid {
+            grid-template-columns: repeat(3, 1fr);
+        }
+    }
+
+    @media (max-width: 768px) {
+        .film-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+
+    @media (max-width: 480px) {
+        .film-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+<div class="container">
+
+    <!--Баннеры динамически -->
+    <div id="ads-carousel" class="carousel">
+        {% for ad in ads %}
+        <div class="carousel-item">
+            <img src="{{ ad.image.url }}" alt="{{ ad.title }}" style="width:100%;">
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Фильмы -->
+    <h2 align="center">Смотрите сегодня: {{ today|date:"d.m.Y" }}</h2>
+    <div class="film-grid">
+        {% for film in today_films %}
+        <div class="film-card">
+            <img src="{{ film.main_image.url }}" alt="{{ film.name }}">
+            <p><a href="{% url 'film_detail' film.id %}">{{ film.name }}</a></p>
+            <a href="{% url 'schedule' %}?film={{ film.id }}">
+                <button type="button">Купить</button>
+            </a>
+
+        </div>
+        {% empty %}
+        <p>Сегодня нет сеансов.</p>
+        {% endfor %}
+    </div>
+
+    <!-- 🔶 3. Смотрите скоро -->
+    <h2>Смотрите скоро</h2>
+    <div class="film-grid">
+        {% for film in coming_soon_films %}
+        <div class="film-card">
+            <img src="{{ film.main_image.url }}" alt="{{ film.name }}">
+            <a href="{% url 'film_detail' film.id %}">{{ film.name }}</a>
+            <p>С {{ film.start_date|date:"d.m.Y" }}</p>
+        </div>
+        {% empty %}
+        <p>Нет запланированных премьер.</p>
+        {% endfor %}
+    </div>
+
+</div>
+
+{% endblock %}

@@ -1,0 +1,96 @@
+{% extends 'admin_base.html'%}
+{% load static %}
+{% block content%}
+  <h1 align="center">Пользователи</h1><a href="{% url 'useradd' %}">Добавить пользователя</a>
+<h2>Список пользователей</h2>
+
+<table id="users-table" class="display" style="width:100%">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Дата регистрации</th>
+            <th>День рождения</th>
+            <th>Email</th>
+            <th>Телефон</th>
+            <th>ФИО</th>
+            <th>Псевдоним</th>
+            <th>Город</th>
+        </tr>
+    </thead>
+    <tbody>
+    </tbody>
+</table>
+
+<!-- Подключаем jQuery и DataTables -->
+<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<!--<script src="{% static 'js/csrf.js' %}"></script>-->
+
+<script>
+$(document).ready(function() {
+    $('#users-table').DataTable({
+        processing: true,
+        serverSide: true,
+        ajax: {
+            url: "{% url 'user_json' %}",
+            type: 'GET'
+        },
+        columns: [
+            { data: 'id', name: 'id' },
+            { data: 'registration_date', name: 'registration_date' },
+            { data: 'birthday', name: 'birthday' },
+            { data: 'email', name: 'email' },
+            { data: 'phone_user', name: 'phone_user' },
+            { data: 'full_name', name: 'full_name' },
+            { data: 'username', name: 'username' },
+            { data: 'town', name: 'town' },
+            {
+                data: null,
+                orderable: false,
+                searchable: false,
+                render: function (data, type, row) {
+                    return `
+                    <a href="{{ edit_url_base }}${id}/edit/" title="Редактировать">✏️</a>
+                     &nbsp;
+                     <a href="#" class="delete-news" data-id="${id}" title="Удалить">🗑️</a>
+                    `;
+                }
+            }
+        ]
+    });
+    // Обработчик клика по кнопке удаления
+    $('#users-table').on('click', '.delete-btn', function() {
+        const userId = $(this).data('id');
+        if (confirm('Вы уверены, что хотите удалить этого пользователя?')) {
+            $.ajax({
+                url: "{% url 'user_delete'  %}",
+                method: 'POST',
+                data: {
+                    'id': userId,
+                    'csrfmiddlewaretoken': '{{ csrf_token }}'
+                },
+                success: function(response) {
+                    if (response.success) {
+                        $('#users-table').DataTable().ajax.reload();
+                        alert('Пользователь удалён');
+                    } else {
+                        alert('Ошибка при удалении');
+                    }
+                },
+                error: function() {
+                    alert('Ошибка запроса');
+                }
+            });
+        }
+    });
+
+    // Обработчик клика по кнопке редактирования — тут можно сделать редирект или открыть форму
+    $('#users-table').on('click', '.edit-btn', function() {
+        const userId = $(this).data('id');
+        window.location.href = `/user/edit/${userId}/`; // пример редиректа на страницу редактирования
+    });
+
+});
+</script>
+{% endblock %}

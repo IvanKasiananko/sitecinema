@@ -1,0 +1,255 @@
+{% extends 'cinema_base.html' %}
+{% load static %}
+
+{% block content %}
+<!-- СТИЛИ -->
+<style>
+.main-banner-wrapper {
+    width: 100vw;
+    margin-left: calc(-50vw + 50%);
+}
+.main-banner {
+    width: 100%;
+    height: auto;
+    display: block;
+    object-fit: cover;
+}
+.main-banner.placeholder {
+    background-color: #ccc;
+    height: 300px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #666;
+    font-weight: bold;
+    font-size: 24px;
+}
+
+.row {
+    display: flex;
+    margin-bottom: 4px;
+}
+.seat {
+    width: 32px;
+    height: 32px;
+    line-height: 32px;
+    text-align: center;
+    border-radius: 4px;
+    font-size: 14px;
+    margin: 2px;
+    cursor: pointer;
+    color: white;
+}
+.seat.free { background-color: #28a745; }
+.seat.booked { background-color: #ffc107; cursor: not-allowed; }
+.seat.bought { background-color: #dc3545; cursor: not-allowed; }
+.seat.selected { background-color: #007bff; }
+.seat.empty { visibility: hidden; }
+
+.legend-box {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    margin-right: 5px;
+    border-radius: 3px;
+}
+
+.action-buttons {
+    display: flex;
+    justify-content: flex-end;
+    gap: 20px;
+    margin-top: 40px;
+}
+
+.btn {
+    padding: 12px 24px;
+    font-size: 18px;
+    border-radius: 5px;
+    min-width: 180px;
+    cursor: pointer;
+    border: none;
+    transition: 0.2s ease;
+}
+
+.btn-outline {
+    background-color: white;
+    color: #333;
+    border: 2px solid #333;
+}
+
+.btn-filled {
+    background-color: #28a745;
+    color: white;
+    border: 2px solid #28a745;
+}
+
+.btn:hover {
+    opacity: 0.9;
+}
+</style>
+<!-- БАННЕР НА ВСЮ ШИРИНУ -->
+{% if main_banner %}
+  <div class="main-banner-wrapper">
+    <img src="{{ main_banner.url }}" alt="Баннер" class="main-banner">
+  </div>
+{% else %}
+  <div class="main-banner-wrapper">
+    <div class="main-banner placeholder">БАННЕР</div>
+  </div>
+{% endif %}
+
+<!-- ОСНОВНОЙ БЛОК -->
+<div style="display: flex; padding: 30px; justify-content: space-between; gap: 40px;">
+
+  <!-- ЛЕВАЯ КОЛОНКА -->
+  <div style="width: 250px;">
+      <img src="{{ film.main_image.url }}" alt="{{ film.name }}" style="width: 100%; border: 1px solid #ccc;">
+      <div style="margin-top: 20px; border: 1px solid #999; padding: 10px; height: 300px; text-align: center;">
+          Контекстная реклама
+      </div>
+  </div>
+
+  <!-- ЦЕНТР -->
+  <div style="flex: 1;">
+      <!-- ИНФО -->
+      <div style="margin-bottom: 10px;">
+          <span style="background-color: #a00; color: white; padding: 5px 10px; font-weight: bold;">
+              {{ film.name|upper }}
+          </span>
+      </div>
+      <div style="margin-bottom: 10px;">
+          <strong>{{ session.date_session }}</strong>, {{ session.time_session }}, ЗАЛ №{{ session.hall.id }}
+      </div>
+      <div style="margin-bottom: 20px;">
+          ЦЕНА В ГРН: <input type="text" value="{{ session.price.price1|default_if_none:"" }}" readonly style="width: 50px; text-align: center;">
+      </div>
+
+      <!--  ЗАКАЗ -->
+      <div style="display: flex; align-items: center; gap: 30px; margin-bottom: 20px;">
+          <div>ЗАБРОНИРОВАНО: —</div>
+          <div>ВАШ ЗАКАЗ:</div>
+          <div style="border: 1px solid #000; padding: 5px 10px;">
+              БИЛЕТОВ: <span id="count">0</span>
+          </div>
+          <div style="border: 1px solid #000; padding: 5px 10px;">
+              СУММА: <span id="total">0</span> грн.
+          </div>
+      </div>
+
+      <!-- ЭКРАН -->
+      <div style="text-align: center; margin-top: 30px; margin-bottom: 10px;">
+          <strong style="border-bottom: 1px solid #333;">ЭКРАН</strong>
+      </div>
+
+      <!-- СХЕМА ЗАЛА -->
+      <div style="display: flex; justify-content: center; gap: 15px;">
+          <div>
+              {% for row in matrix %}
+                  <div style="height: 34px; line-height: 34px;">РЯД {{ forloop.counter }}</div>
+              {% endfor %}
+          </div>
+          <div id="hall">
+              {% for row in matrix %}
+                  <div class="row">
+                      {% for ticket in row %}
+                          {% if ticket %}
+                              <div class="seat {{ ticket.status }}"
+                                   data-id="{{ ticket.id }}"
+                                   data-row="{{ ticket.row }}"
+                                   data-place="{{ ticket.place }}">
+                                  {{ ticket.place }}
+                              </div>
+                          {% else %}
+                              <div class="seat empty"></div>
+                          {% endif %}
+                      {% endfor %}
+                  </div>
+              {% endfor %}
+          </div>
+      </div>
+
+      <!-- ЛЕГЕНДА -->
+      <div style="margin-top: 30px; display: flex; gap: 20px; justify-content: center;">
+          <div><span class="legend-box" style="background-color: #28a745;"></span> Свободно</div>
+          <div><span class="legend-box" style="background-color: #ffc107;"></span> Забронировано</div>
+          <div><span class="legend-box" style="background-color: #dc3545;"></span> Куплено</div>
+          <div><span class="legend-box" style="background-color: #007bff;"></span> Выбрано</div>
+      </div>
+
+      <!-- ПОДПИСИ -->
+      <p style="margin-top: 20px; font-size: 14px;">
+          Стоимость услуги бронирования – 3 грн. за каждое место.
+      </p>
+      <p style="font-size: 14px;">
+          ЗАБРОНИРОВАННЫЕ БИЛЕТЫ НУЖНО ВЫКУПИТЬ В КАССЕ КИНОТЕАТРА НЕ ПОЗДНЕЕ ЧЕМ ЗА ПОЛЧАСА ДО НАЧАЛА СЕАНСА.
+      </p>
+
+      <!-- КНОПКИ -->
+      <div class="action-buttons">
+          <button id="book" class="btn btn-outline">Забронировать</button>
+          <button id="buy" class="btn btn-filled">Купить</button>
+      </div>
+  </div>
+</div>
+
+
+
+<!-- JS -->
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    let selected = [];
+    const ticketPrice = {{ session.price.price1|default_if_none:"0"|floatformat:"0" }};
+    const countEl = document.getElementById('count');
+    const totalEl = document.getElementById('total');
+
+    document.querySelectorAll('.seat.free').forEach(seat => {
+        seat.addEventListener('click', () => {
+            seat.classList.toggle('selected');
+            const id = seat.dataset.id;
+
+            if (selected.includes(id)) {
+                selected = selected.filter(s => s !== id);
+            } else {
+                selected.push(id);
+            }
+
+            countEl.innerText = selected.length;
+            totalEl.innerText = selected.length * ticketPrice;
+        });
+    });
+
+    function sendTickets(action) {
+        fetch("{% url 'submit_tickets' %}", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}',
+            },
+            body: JSON.stringify({
+                tickets: selected,
+                action: action
+            })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                alert("Успешно!");
+                location.reload();
+            } else {
+                alert("Ошибка: " + data.error);
+            }
+        });
+    }
+
+    document.getElementById('book').addEventListener('click', () => {
+        if (selected.length === 0) return alert("Выберите хотя бы одно место");
+        sendTickets('book');
+    });
+
+    document.getElementById('buy').addEventListener('click', () => {
+        if (selected.length === 0) return alert("Выберите хотя бы одно место");
+        sendTickets('buy');
+    });
+});
+</script>
+{% endblock %}

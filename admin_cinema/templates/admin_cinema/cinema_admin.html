@@ -1,0 +1,43 @@
+{% extends 'admin_base.html' %}
+{% block content %}
+<h2>Спиcок кинотеатров</h2>
+
+<a href="{% url 'create_cinema' %}" style="
+    display: inline-block;
+    margin-bottom: 15px;
+    padding: 8px 14px;
+    background-color: #4CAF50;
+    color: white;
+    text-decoration: none;
+    border-radius: 4px;
+">Добавить кинотеатр</a>
+
+<div style="display: flex; flex-wrap: wrap; gap: 20px;">
+    {% for cinema in all_cinema %}
+        <div style="
+            width: 23%;
+            text-align: center;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        ">
+            <img src="{{ cinema.logo.url }}"
+                 alt="{{ cinema.name_cinema }}"
+                 style="
+                     width: 100%;
+                     height: 200px;
+                     object-fit: cover;
+                 ">
+            <div style="padding: 10px;">
+                <a href="{% url 'edit_cinema' cinema.pk %}" style="text-decoration: none; color: #333;">
+                    {{ cinema.name_cinema }}
+                </a>
+            </div>
+        </div>
+    {% empty %}
+        <p>Нет кинотеатров</p>
+    {% endfor %}
+</div>
+
+{% endblock %}

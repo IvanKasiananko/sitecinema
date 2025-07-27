@@ -1,0 +1,143 @@
+{% extends 'cinema_base.html' %}
+
+{% block content %}
+
+<style>
+  .form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    max-width: 900px;
+  }
+  /* Левый столбец: метка и поле выравниваются по широкой метке */
+  .left-column .form-group {
+    display: grid;
+    grid-template-columns: max-content auto;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 15px;
+  }
+  /* Правый столбец: обычная адаптивная строка */
+  .right-column .form-group {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 15px;
+  }
+  /* Радиокнопки в ряд */
+  .radio-group {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+  }
+  .radio-group label {
+    display: inline-flex;
+    align-items: center;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .radio-group input[type="radio"] {
+    margin-right: 5px !important;
+    display: inline-block !important;
+    opacity: 1 !important;
+    -webkit-appearance: radio !important;
+    appearance: radio !important;
+  }
+</style>
+
+<h2>Добавить пользователя</h2>
+
+<form method="post" novalidate autocomplete="off">
+  {% csrf_token %}
+  {{ form.non_field_errors }}
+
+  <div class="form-grid">
+    <!-- Первый столбец -->
+    <div class="left-column">
+      {% comment %} manual render left fields {% endcomment %}
+      <div class="form-group">
+        {{ form.first_name.label_tag }}{{ form.first_name }}
+        {{ form.first_name.errors }}
+      </div>
+      <div class="form-group">
+        {{ form.last_name.label_tag }}{{ form.last_name }}
+        {{ form.last_name.errors }}
+      </div>
+      <div class="form-group">
+        {{ form.username.label_tag }}{{ form.username }}
+        {{ form.username.errors }}
+      </div>
+      <div class="form-group">
+        {{ form.email.label_tag }}{{ form.email }}
+        {{ form.email.errors }}
+      </div>
+      <div class="form-group">
+        {{ form.adress.label_tag }}{{ form.adress }}
+        {{ form.adress.errors }}
+      </div>
+      <div class="form-group">
+        {{ form.password.label_tag }}{{ form.password }}
+        {{ form.password.errors }}
+      </div>
+      <div class="form-group">
+        {{ form.card_user.label_tag }}{{ form.card_user }}
+        {{ form.card_user.errors }}
+      </div>
+    </div>
+
+    <!-- Второй столбец -->
+    <div class="right-column">
+      {% comment %} manual render right fields {% endcomment %}
+      <div class="form-group">
+        {{ form.language.label_tag }}
+        <div class="radio-group">
+          {% for val, label in form.fields.language.choices %}
+            <label>
+              <input type="radio"
+                     name="{{ form.language.html_name }}"
+                     value="{{ val }}"
+                     {% if form.language.value|stringformat:"s" == val|stringformat:"s" %}checked{% endif %}>
+              {{ label }}
+            </label>
+          {% endfor %}
+        </div>
+        {{ form.language.errors }}
+      </div>
+      <div class="form-group">
+        {{ form.sex.label_tag }}
+        <div class="radio-group">
+          {% for val, label in form.fields.sex.choices %}
+            <label>
+              <input type="radio"
+                     name="{{ form.sex.html_name }}"
+                     value="{{ val }}"
+                     {% if form.sex.value|stringformat:"s" == val|stringformat:"s" %}checked{% endif %}>
+              {{ label }}
+            </label>
+          {% endfor %}
+        </div>
+        {{ form.sex.errors }}
+      </div>
+      <div class="form-group">
+        {{ form.phone_user.label_tag }}{{ form.phone_user }}
+        {{ form.phone_user.errors }}
+      </div>
+      <div class="form-group">
+        {{ form.birthday.label_tag }}{{ form.birthday }}
+        {{ form.birthday.errors }}
+      </div>
+      <div class="form-group">
+        {{ form.town.label_tag }}{{ form.town }}
+        {{ form.town.errors }}
+      </div>
+      <div class="form-group">
+        {{ form.confirm_password.label_tag }}{{ form.confirm_password }}
+        {{ form.confirm_password.errors }}
+      </div>
+    </div>
+  </div>
+
+  <button type="submit">Сохранить</button>
+</form>
+
+{% endblock %}

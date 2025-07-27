@@ -1,0 +1,279 @@
+{% extends 'cinema_base.html' %}
+{% block content %}
+
+<style>
+  .main-photo {
+    width: 100%;
+    max-height: 400px;
+    object-fit: cover;
+  }
+
+  .green-btn {
+    display: inline-block;
+    background-color: green;
+    color: white;
+    padding: 10px 20px;
+    text-decoration: none;
+    font-weight: bold;
+    border-radius: 4px;
+    margin: 10px 0;
+  }
+
+  .cinema-layout {
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;
+  }
+
+  .left-column {
+    width: 300px;
+  }
+
+  .banner-photo, .placeholder-banner {
+    width: 100%;
+    height: 150px;
+    object-fit: cover;
+    border-radius: 4px;
+    margin-bottom: 10px;
+  }
+
+  .placeholder-banner {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #e0e0e0;
+    color: #666;
+    font-weight: bold;
+  }
+
+  .sidebar {
+    background-color: #f5f5f5;
+    padding: 10px;
+  }
+
+  .hall-item,
+  .session-item {
+    border: 1px solid #ccc;
+    padding: 5px;
+    margin-bottom: 5px;
+    text-align: center;
+    border-radius: 4px;
+  }
+
+  .hall-item a {
+    text-decoration: none;
+    color: black;
+    display: block;
+  }
+
+  .hall-item a:hover {
+    background-color: #e0e0e0;
+  }
+
+  .description-section {
+    flex: 1;
+  }
+
+  .carousel-container {
+    position: relative;
+    overflow: hidden;
+    width: 100%;
+    max-width: 600px;
+    margin: auto;
+  }
+
+  .carousel-slide {
+    display: flex;
+    transition: transform 0.5s ease-in-out;
+  }
+
+  .carousel-slide img {
+    width: 100%;
+    flex-shrink: 0;
+    border-radius: 4px;
+    max-height: 300px;
+    object-fit: cover;
+  }
+
+  .carousel-dots {
+    text-align: center;
+    margin-top: 10px;
+  }
+
+  .dot {
+    display: inline-block;
+    height: 10px;
+    width: 10px;
+    margin: 0 5px;
+    background-color: #bbb;
+    border-radius: 50%;
+    cursor: pointer;
+  }
+
+  .dot.active {
+    background-color: #717171;
+  }
+
+  .prev, .next {
+    cursor: pointer;
+    position: absolute;
+    top: 50%;
+    padding: 10px;
+    color: black;
+    font-weight: bold;
+    font-size: 18px;
+    background-color: rgba(255,255,255,0.7);
+    border-radius: 3px;
+    user-select: none;
+  }
+
+  .prev:hover, .next:hover {
+    background-color: rgba(200,200,200,0.9);
+  }
+
+  .prev { left: 0; }
+  .next { right: 0; }
+</style>
+
+<!-- 🔷 Главное фото -->
+<img src="{{ cinema.logo.url }}" alt="{{ cinema.name_cinema }}" class="main-photo">
+
+<!-- 🔷 Зеленая кнопка Расписание сеансов (по центру) -->
+<div style="text-align: center;">
+  <a href="{% url 'schedule' %}" class="green-btn">Расписание сеансов</a>
+</div>
+
+<!-- 🔷 Общий flex-контейнер -->
+<div class="cinema-layout">
+
+  <!-- Левая колонка: баннер + сайдбар -->
+  <div class="left-column">
+
+    <!-- 🔷 Баннер -->
+    {% if cinema.banner %}
+      <img src="{{ cinema.banner.url }}" alt="Баннер" class="banner-photo">
+    {% else %}
+      <div class="banner-photo placeholder-banner">Баннер</div>
+    {% endif %}
+
+    <!-- 🔷 Sidebar -->
+    <div class="sidebar">
+      <h3>Количество залов: {{ halls.count }}</h3>
+
+      <div class="halls-list">
+        {% for hall in halls %}
+          <div class="hall-item">
+            <a href="{% url 'hall_detail' hall.id %}">{{ hall.name_hall_uk }}</a>
+          </div>
+        {% empty %}
+          <div>Нет залов</div>
+        {% endfor %}
+      </div>
+
+      <h3>Смотрите сегодня:</h3>
+      <div class="today-sessions">
+        {% for s in sessions_today %}
+          <div class="session-item">
+            {{ s.film.name }}<br>{{ s.time_session|time:"H:i" }} | {{ s.type_film }}
+          </div>
+        {% empty %}
+          <div>Нет сеансов</div>
+        {% endfor %}
+      </div>
+
+      <!-- 🔷 Зеленая кнопка Расписание всех сеансов -->
+      <div style="text-align: center;">
+        <a href="{% url 'schedule' %}" class="green-btn">Расписание всех сеансов</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Правая колонка: описание, условия, галерея -->
+  <div class="description-section">
+    <h2 align="center">О кинотеатре</h2>
+    <div>{{ cinema.seo_text|safe }}</div>
+
+    <h2 align="center">Условия</h2>
+    <div>{{ cinema.conditions|safe }}</div>
+
+    <!-- 🔷 Карусель баннеров -->
+    <h2 align="center">Фотогалерея</h2>
+
+    {% if cinema.gall %}
+      <div class="carousel-container" id="carousel">
+        <div class="carousel-slide">
+          {% for image in cinema.gall.image_set.all %}
+            <img src="{{ image.image.url }}" alt="">
+          {% empty %}
+            <p>Нет фото</p>
+          {% endfor %}
+        </div>
+
+        <!-- Кнопки влево и вправо -->
+        <a class="prev" onclick="plusSlides(-1)">&#10094;</a>
+        <a class="next" onclick="plusSlides(1)">&#10095;</a>
+
+        <div class="carousel-dots">
+          {% for image in cinema.gall.image_set.all %}
+            <span class="dot" onclick="currentSlide({{ forloop.counter0 }})"></span>
+          {% endfor %}
+        </div>
+      </div>
+    {% else %}
+      <p>Галерея не привязана</p>
+    {% endif %}
+  </div>
+</div>
+
+<script>
+  let currentIndex = 0;
+
+  function showSlide(index) {
+    const slides = document.querySelector('.carousel-slide');
+    const dots = document.querySelectorAll('.dot');
+    const totalSlides = dots.length;
+
+    if (index >= totalSlides) currentIndex = 0;
+    else if (index < 0) currentIndex = totalSlides - 1;
+    else currentIndex = index;
+
+    slides.style.transform = 'translateX(' + (-currentIndex * 100) + '%)';
+
+    dots.forEach(dot => dot.classList.remove('active'));
+    dots[currentIndex].classList.add('active');
+  }
+
+  function plusSlides(n) {
+    showSlide(currentIndex + n);
+  }
+
+  function currentSlide(index) {
+    showSlide(index);
+  }
+
+  // Авто-прокрутка
+  setInterval(() => {
+    showSlide(currentIndex + 1);
+  }, 5000);
+
+  // Инициализация
+  document.addEventListener('DOMContentLoaded', () => {
+    showSlide(0);
+
+    // Swipe жесты
+    const carousel = document.getElementById('carousel');
+    let startX;
+
+    carousel.addEventListener('touchstart', (e) => {
+      startX = e.touches[0].clientX;
+    });
+
+    carousel.addEventListener('touchend', (e) => {
+      let endX = e.changedTouches[0].clientX;
+      if (startX - endX > 50) plusSlides(1);
+      else if (endX - startX > 50) plusSlides(-1);
+    });
+  });
+</script>
+
+{% endblock %}

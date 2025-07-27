@@ -1,0 +1,101 @@
+{% extends 'cinema_base.html' %}
+{% block content %}
+
+<style>
+  .page-layout {
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;
+  }
+
+  .cinemas-list {
+    flex: 3;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+  }
+
+  .cinema-item {
+    width: 23%;
+    background: white;
+    text-align: center;
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  .cinema-item img {
+    width: 100%;
+    height: 150px;
+    object-fit: cover;
+    border-radius: 8px 8px 0 0;
+  }
+
+  .cinema-item a {
+    display: block;
+    padding: 10px;
+    font-weight: bold;
+    text-decoration: none;
+    color: black;
+  }
+
+  .cinema-item a:hover {
+    color: #004080;
+  }
+
+
+
+  /*}*/
+  .right-banners {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: flex-end;
+}
+
+.right-banners img,
+.right-banners .banner-placeholder {
+  width: 150px;
+  height: 250px;
+  object-fit: cover;
+  border-radius: 4px;
+}
+
+.banner-placeholder {
+  background-color: #ccc;
+  color: #666;
+  font-weight: bold;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+</style>
+
+<h2 style="text-align:center; margin-bottom:20px;">Список кинотеатров</h2>
+
+<div class="page-layout">
+
+  <!-- 🔷 Левый блок: список кинотеатров -->
+  <div class="cinemas-list">
+    {% for cinema in all_cinema %}
+      <div class="cinema-item">
+        {% if cinema.logo %}
+          <img src="{{ cinema.logo.url }}" alt="{{ cinema.name_cinema }}">
+        {% else %}
+          <div style="width:100%; height:150px; background:#ccc; display:flex; align-items:center; justify-content:center;">
+            Нет фото
+          </div>
+        {% endif %}
+
+        <a href="{% url 'cinema_detail' cinema.pk %}">{{ cinema.name_cinema }}</a>
+      </div>
+    {% empty %}
+      <p>Нет кинотеатров</p>
+    {% endfor %}
+  </div>
+
+  <!-- 🔷 Правый блок баннеров -->
+  {% include 'includes/right_banners.html' %}
+
+</div>
+
+{% endblock %}

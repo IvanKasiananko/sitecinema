@@ -1,0 +1,411 @@
+{% extends 'admin_base.html' %}
+{% block content %}
+<style>
+    .rounded-form {
+      border: 1px solid #ccc;
+      border-radius: 12px;
+      padding: 20px;
+      background-color: #f9f9f9;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+      margin: 20px 0;
+    }
+
+    .radio-inline {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+
+    .radio-row {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .selected-users-list {
+      display: none;
+      padding: 10px;
+      background: #fff;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      margin-top: 5px;
+      font-size: 0.9em;
+      width: 300px;
+      margin-left: 500px;
+      max-height: 200px;
+      overflow-y: auto;
+      position: relative;
+    }
+
+    .char-count {
+      font-size: 0.9em;
+      color: #666;
+    }
+
+    button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .alert {
+      padding: 10px;
+      border-radius: 5px;
+      margin-bottom: 15px;
+    }
+
+    .alert-success { background-color: #d4edda; color: #155724; }
+    .alert-warning { background-color: #fff3cd; color: #856404; }
+    .alert-error   { background-color: #f8d7da; color: #721c24; }
+</style>
+
+{% if messages %}
+  {% for message in messages %}
+    <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+  {% endfor %}
+{% endif %}
+
+<!-- SMS форма -->
+<form method="post" class="rounded-form" id="smsForm" action="{% url 'newsletter' %}">
+    {% csrf_token %}
+    <h2>SMS</h2>
+    <div class="radio-row">
+        <p>Выбрать пользователей кому слать</p>
+        {% for radio in sms_form.sms_all_user %}
+          <label>{{ radio.tag }} {{ radio.choice_label }}</label>
+        {% endfor %}
+        <button type="button" class="select-user-btn" id="sms-user-btn" data-url="{% url 'select_users_page' %}"
+                data-target="sms-selected-users-list">Выбрать пользователя
+        </button>
+    </div>
+    <div class="selected-users-list" id="sms-selected-users-list"></div>
+
+    <label>
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+          {{ sms_form.text_sms.label_tag }}
+          <span class="char-count">0 символов</span>
+      </div>
+      {{ sms_form.text_sms }}
+    </label>
+
+    <button type="submit" name="send_sms">Начать рассылку</button>
+</form>
+
+<!-- Блок прогресса SMS -->
+<div id="sms-progress" style="display:none; margin-top:10px;">
+    <p>Отправлено SMS: <span id="sms-current">0</span> из <span id="sms-total">0</span></p>
+    <progress id="sms-progress-bar" max="100" value="0" style="width:100%;"></progress>
+</div>
+
+<!-- Email форма -->
+<form method="post" enctype="multipart/form-data" class="rounded-form" id="emailForm" action="{% url 'newsletter' %}">
+    {% csrf_token %}
+    {% if email_form.errors %}
+    <div style="color: red;">
+        <strong>Ошибки Email формы:</strong>
+        <ul>
+            {% for field, errors in email_form.errors.items %}
+            <li>{{ field }}: {{ errors|join:", " }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+    <h2>Email</h2>
+    <div class="radio-row">
+        <p>Выбрать пользователей кому слать</p>
+        {% for radio in email_form.email_all_user %}
+          <label>{{ radio.tag }} {{ radio.choice_label }}</label>
+        {% endfor %}
+        <button type="button" class="select-user-btn" id="email-user-btn" data-url="{% url 'select_users_page' %}"
+                data-target="email-selected-users-list">Выбрать пользователя
+        </button>
+    </div>
+    <div class="selected-users-list" id="email-selected-users-list"></div>
+
+    <div>
+        <label for="file_input">Загрузить HTML-шаблон:</label>
+        <input type="file" name="file" id="file_input" style="display: none;">
+        <button type="button" id="upload_btn">Загрузить</button>
+        <p>Загружен: <span id="uploaded_filename"></span></p>
+    </div>
+
+    <div id="latest_templates_block">
+        <h3>Последние шаблоны:</h3>
+        {% if latest_templates %}
+          {% for template in latest_templates %}
+            <div style="display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid #ccc;">
+                <label style="display: flex; align-items: center; gap: 10px;">
+                    <input type="radio" name="selected_template" value="{{ template.id }}">
+                    {{ template.name_template }}
+                </label>
+                <button type="button" class="delete-template-btn" data-id="{{ template.id }}">Удалить</button>
+            </div>
+          {% endfor %}
+        {% else %}
+          <p>Нет загруженных шаблонов.</p>
+        {% endif %}
+    </div>
+
+    <button type="submit" name="send_email">Начать рассылку</button>
+</form>
+
+<!-- Блок прогресса Email -->
+<div id="email-progress" style="display:none; margin-top:10px;">
+    <p>Отправлено Email: <span id="email-current">0</span> из <span id="email-total">0</span></p>
+    <progress id="email-progress-bar" max="100" value="0" style="width:100%;"></progress>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+
+  // Получить CSRF токен из cookie
+  function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+      const cookies = document.cookie.split(';');
+      for (let cookie of cookies) {
+        cookie = cookie.trim();
+        if (cookie.startsWith(name + '=')) {
+          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+          break;
+        }
+      }
+    }
+    return cookieValue;
+  }
+  const csrfToken = getCookie('csrftoken');
+
+  // --- Отображение выбранных пользователей ---
+  function renderSelectedUsers(formId, targetId, storageKey, inputName) {
+    const block = document.getElementById(targetId);
+    const raw = localStorage.getItem(storageKey);
+    if (!raw) return block.style.display = 'none';
+    const users = JSON.parse(raw);
+    if (!users.length) return block.style.display = 'none';
+
+    block.innerHTML = '<strong>Выбраны:</strong>';
+    users.forEach(u => {
+      block.innerHTML += `<div>${u.username}</div>
+        <input type="hidden" name="${inputName}" value="${u.id}">`;
+    });
+    block.style.display = 'block';
+  }
+
+  function setupRadioToggle(formId, inputName, btnId, listId, storageKey) {
+    const form = document.getElementById(formId);
+    const radios = form.querySelectorAll(`input[name="${inputName}"]`);
+    const button = document.getElementById(btnId);
+
+    function toggle() {
+      const selected = form.querySelector(`input[name="${inputName}"]:checked`);
+      if (selected?.value === 'all') {
+        button.disabled = true;
+        document.getElementById(listId).style.display = 'none';
+      } else {
+        button.disabled = false;
+        renderSelectedUsers(formId, listId, storageKey, `${formId === 'smsForm' ? 'sms' : 'email'}_selected_users`);
+      }
+    }
+
+    radios.forEach(r => r.addEventListener('change', toggle));
+    toggle();
+  }
+
+  setupRadioToggle('smsForm', 'sms_all_user', 'sms-user-btn', 'sms-selected-users-list', 'smsForm_selected_users');
+  setupRadioToggle('emailForm', 'email_all_user', 'email-user-btn', 'email-selected-users-list', 'emailForm_selected_users');
+
+  document.querySelectorAll('.select-user-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const type = btn.id.startsWith('sms') ? 'sms' : 'email';
+      sessionStorage.setItem('userSelectionForm', type);
+      localStorage.setItem('hasSelectedUsers', 'true');
+      window.location.href = btn.dataset.url;
+    });
+  });
+
+  renderSelectedUsers('smsForm', 'sms-selected-users-list', 'smsForm_selected_users', 'sms_selected_users');
+  renderSelectedUsers('emailForm', 'email-selected-users-list', 'emailForm_selected_users', 'email_selected_users');
+
+  function autoSelect(formId, inputName, storageKey) {
+    const form = document.getElementById(formId);
+    const radio = form.querySelector(`input[name="${inputName}"][value="choice"]`);
+    const users = localStorage.getItem(storageKey);
+    if (users && JSON.parse(users).length && radio) {
+      radio.checked = true;
+      radio.dispatchEvent(new Event('change'));
+    }
+  }
+
+  autoSelect('smsForm', 'sms_all_user', 'smsForm_selected_users');
+  autoSelect('emailForm', 'email_all_user', 'emailForm_selected_users');
+
+  // --- Счётчик символов для SMS ---
+  const smsTextarea = document.querySelector('textarea[name="text_sms"]');
+  const count = document.querySelector('.char-count');
+  smsTextarea?.addEventListener('input', () => {
+    const len = smsTextarea.value.length;
+    count.textContent = `${len} символ${(len % 10 === 1 && len % 100 !== 11) ? '' : 'ов'}`;
+  });
+
+  // --- Загрузка шаблонов Email ---
+  const uploadBtn = document.getElementById('upload_btn');
+  const fileInput = document.getElementById('file_input');
+  const filenameSpan = document.getElementById('uploaded_filename');
+
+  uploadBtn.addEventListener('click', () => fileInput.click());
+  fileInput.addEventListener('change', () => {
+    const file = fileInput.files[0];
+    if (!file) return;
+    filenameSpan.textContent = file.name;
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    fetch("{% url 'upload_template' %}", {
+      method: "POST",
+      headers: { "X-CSRFToken": csrfToken },
+      body: formData
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (data.success) {
+        alert('Шаблон успешно загружен!');
+      } else {
+        filenameSpan.textContent = "Ошибка загрузки";
+      }
+    })
+    .catch(() => filenameSpan.textContent = "Ошибка запроса");
+  });
+
+  // --- Удаление шаблонов через fetch ---
+  document.querySelectorAll('.delete-template-btn').forEach(button => {
+    button.addEventListener('click', () => {
+      const templateId = button.dataset.id;
+      fetch("{% url 'delete_template' %}", {
+        method: "POST",
+        headers: {
+          "X-CSRFToken": csrfToken,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ id: templateId })
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          location.reload();
+        } else {
+          alert("Ошибка при удалении");
+        }
+      });
+    });
+  });
+
+  // --- AJAX отправка SMS формы и отображение прогресса ---
+  document.getElementById('smsForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+
+    const form = e.target;
+    const url = form.action;
+    const formData = new FormData(form);
+    formData.append('send_sms', '1');
+
+    fetch(url, {
+      method: 'POST',
+      headers: {
+        'X-CSRFToken': csrfToken,
+        'X-Requested-With': 'XMLHttpRequest'
+      },
+      body: formData,
+      credentials: 'same-origin'
+    })
+    .then(response => {
+      if (!response.ok) throw new Error('Сетевая ошибка');
+      return response.json();
+    })
+    .then(data => {
+      if (data.task_id) {
+        document.getElementById('sms-progress').style.display = 'block';
+        pollTaskStatus(data.task_id, 'sms');
+      } else if (data.error) {
+        alert(data.error);
+      } else {
+        alert('Ошибка при запуске рассылки');
+      }
+    })
+    .catch(() => alert('Ошибка сети'));
+  });
+
+  // --- AJAX отправка Email формы и отображение прогресса ---
+  document.getElementById('emailForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+
+    const formData = new FormData(this);
+    formData.append('send_email', '1');
+
+    fetch("{% url 'newsletter' %}", {
+      method: 'POST',
+      headers: {
+        'X-CSRFToken': csrfToken,
+        'X-Requested-With': 'XMLHttpRequest'
+      },
+      body: formData
+    })
+    .then(response => {
+      if (!response.ok) throw new Error('Сетевая ошибка');
+      return response.json();
+    })
+    .then(data => {
+      if (data.task_id) {
+        document.getElementById('email-progress').style.display = 'block';
+        pollTaskStatus(data.task_id, 'email');
+      } else if (data.error) {
+        alert(data.error);
+      } else {
+        alert('Ошибка при запуске рассылки');
+      }
+    })
+    .catch(() => alert('Ошибка сети'));
+  });
+
+  // --- Проверка статуса задачи и обновление прогресса ---
+  function pollTaskStatus(taskId, type) {
+    const url = `/admin/task-status/${taskId}/`;
+    const progressBar = document.getElementById(type + '-progress-bar');
+    const currentSpan = document.getElementById(type + '-current');
+    const totalSpan = document.getElementById(type + '-total');
+
+    const interval = setInterval(() => {
+      fetch(url)
+      .then(res => res.json())
+      .then(data => {
+        if (data.state === 'PROGRESS') {
+          const current = data.current || 0;
+          const total = data.total || 1;
+          currentSpan.textContent = current;
+          totalSpan.textContent = total;
+          progressBar.max = total;
+          progressBar.value = current;
+        } else if (data.state === 'SUCCESS') {
+          currentSpan.textContent = data.result.total || '0';
+          totalSpan.textContent = data.result.total || '0';
+          progressBar.max = data.result.total || 1;
+          progressBar.value = data.result.total || 0;
+          clearInterval(interval);
+          alert(`Рассылка ${type === 'sms' ? 'SMS' : 'Email'} завершена!`);
+        } else {
+          clearInterval(interval);
+          alert('Ошибка или отмена задачи');
+        }
+      })
+      .catch(() => {
+        clearInterval(interval);
+        alert('Ошибка при получении статуса задачи');
+      });
+    }, 1000);
+  }
+
+});
+</script>
+{% endblock %}

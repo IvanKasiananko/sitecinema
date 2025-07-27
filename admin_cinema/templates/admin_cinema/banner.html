@@ -1,0 +1,184 @@
+{% extends 'admin_base.html' %}
+{% load static %}
+
+{% block content %}
+
+<style>
+
+</style>
+
+<!-- Форма для Главной -->
+<h2 align="center">На Главной верх</h2>
+<form method="post" enctype="multipart/form-data" id="main-form">
+  {% csrf_token %}
+  {{ main_formset.management_form }}
+
+  <div style="display: flex; overflow-x: auto; gap: 10px; align-items: flex-start;">
+    {% for form in main_formset %}
+      <div class="form-item">
+          <div style="display: none;">
+             {{ form.id }}
+          </div>
+        <div class="image-container">
+          {% if form.instance.image_main %}
+            <img src="{{ form.instance.image_main.url }}" style="max-width: 100%; max-height: 100px; margin-top:5px;">
+          {% endif %}
+          <label for="{{ form.image_main.id_for_label }}"></label><br>
+          <input type="file" style="color:transparent; width:70px;" name="{{ form.image_main.html_name }}" id="{{ form.image_main.id_for_label }}" accept="image/*">
+        </div>
+        <div class="fields-container">
+          {{ form.url_banner.label_tag }}<br>
+          {{ form.url_banner }}
+        </div>
+        <div>
+          {{ form.text_banner.label_tag }}<br>
+          {{ form.text_banner }}
+        </div>
+        <div class="delete-container">
+          {{ form.DELETE }}
+          <span class="delete-cross" title="Удалить форму">×</span>
+        </div>
+      </div>
+    {% endfor %}
+
+    <button type="button" onclick="addForm('main')" class="add-button">+ Добавить форму</button>
+  </div>
+
+  <div style="margin-top: 10px;">
+    <label for="speed_main">Скорость (сек): </label>
+    <select name="speed_main" id="speed_main">
+      {% for i in speed_range %}
+        <option value="{{ i }}" {% if speed_main == i %}selected{% endif %}>{{ i }}</option>
+      {% endfor %}
+    </select>
+  </div>
+
+  <div style="text-align: center;">
+    <button type="submit" name="save_main" class="save-button">Сохранить</button>
+  </div>
+</form>
+
+<hr style="margin: 40px 0;">
+
+<h2 align="center">Сквозной банер на заднем фоне</h2>
+<form method="post" enctype="multipart/form-data">
+  {% csrf_token %}
+  <div class="fon-block">
+    <div class="fon-radio-group">
+      <label><input type="radio" name="fon" value="True" {% if banner_fon and banner_fon.fon %}checked{% endif %}> Фото на фон</label>
+      <label><input type="radio" name="fon" value="False" {% if banner_fon and not banner_fon.fon %}checked{% endif %}> Просто фон</label>
+    </div>
+
+    <div>
+      {% if banner_fon and banner_fon.image_back %}
+        <img src="{{ banner_fon.image_back.url }}" alt="Фоновое изображение" class="fon-image" />
+      {% endif %}
+      <input type="file" name="image_back" style="margin-top: 10px;">
+    </div>
+
+    <div class="fon-right-block">
+      <div class="fon-buttons">
+        <button type="submit" name="submit_fon">Добавить</button>
+        <button type="submit" name="delete_fon">Удалить</button>
+      </div>
+    </div>
+  </div>
+</form>
+<hr style="margin: 40px 0;">
+<!-- Форма для Акции -->
+<h2 align="center">На главной Новости Акции</h2>
+<form method="post" enctype="multipart/form-data" id="action-form">
+  {% csrf_token %}
+  {{ action_formset.management_form }}
+
+  <div style="display: flex; overflow-x: auto; gap: 10px; align-items: flex-start;">
+    {% for form in action_formset %}
+      <div class="form-item">
+        {{ form.id }}
+        <div class="image-container">
+          {% if form.instance.image_main %}
+            <img src="{{ form.instance.image_main.url }}" style="max-width: 100%; max-height: 100px; margin-top:5px;">
+          {% endif %}
+          <label for="{{ form.image_main.id_for_label }}"></label><br>
+          <input type="file" title="proba" style="color:transparent; width:70px;" name="{{ form.image_main.html_name }}" id="{{ form.image_main.id_for_label }}" accept="image/*">
+        </div>
+        <div class="fields-container">
+          {{ form.url_banner.label_tag }}<br>
+          {{ form.url_banner }}
+        </div>
+        <div>
+          {{ form.text_banner.label_tag }}<br>
+          {{ form.text_banner }}
+        </div>
+        <div class="delete-container">
+          {{ form.DELETE }}
+          <span class="delete-cross" title="Удалить форму">×</span>
+        </div>
+      </div>
+    {% endfor %}
+
+    <button type="button" onclick="addForm('action')" class="add-button">+ Добавить форму</button>
+  </div>
+
+  <div style="margin-top: 10px;">
+    <label for="speed_action">Скорость (сек): </label>
+    <select name="speed_action" id="speed_action">
+      {% for i in speed_range %}
+        <option value="{{ i }}" {% if speed_action == i %}selected{% endif %}>{{ i }}</option>
+      {% endfor %}
+    </select>
+  </div>
+
+  <div style="text-align: center;">
+    <button type="submit" name="save_action" class="save-button">Сохранить</button>
+  </div>
+</form>
+
+<!-- empty_form шаблоны -->
+<div id="main-empty-form" style="display: none;">
+  <div class="form-item">
+    {{ main_formset.empty_form.id }}
+    <div class="image-container">
+      {{ main_formset.empty_form.image_main.label_tag }}<br>
+      {{ main_formset.empty_form.image_main.as_widget }}
+    </div>
+    <div class="fields-container">
+      {{ main_formset.empty_form.url_banner.label_tag }}<br>
+      {{ main_formset.empty_form.url_banner }}
+    </div>
+    <div>
+      {{ main_formset.empty_form.text_banner.label_tag }}<br>
+      {{ main_formset.empty_form.text_banner }}
+    </div>
+    <div class="delete-container">
+      {{ main_formset.empty_form.DELETE }}
+      <span class="delete-cross" title="Удалить форму">×</span>
+    </div>
+  </div>
+</div>
+
+<div id="action-empty-form" style="display: none;">
+  <div class="form-item">
+    {{ action_formset.empty_form.id }}
+    <div>
+      {{ action_formset.empty_form.image_main.label_tag }}<br>
+      {{ action_formset.empty_form.image_main.as_widget }}
+    </div>
+    <div>
+      {{ action_formset.empty_form.url_banner.label_tag }}<br>
+      {{ action_formset.empty_form.url_banner }}
+    </div>
+    <div>
+      {{ action_formset.empty_form.text_banner.label_tag }}<br>
+      {{ action_formset.empty_form.text_banner }}
+    </div>
+    <div class="delete-container">
+      {{ action_formset.empty_form.DELETE }}
+      <span class="delete-cross" title="Удалить форму">×</span>
+    </div>
+  </div>
+</div>
+
+<script src="{% static 'js/banner_admin.js' %}"></script>
+
+{% endblock %}

@@ -1,0 +1,139 @@
+{% extends 'cinema_base.html' %}
+{% block content %}
+
+<style>
+  .main-banner {
+    width: 100%;
+    max-height: 400px;
+    object-fit: cover;
+    border-radius: 4px;
+    margin-bottom: 20px;
+  }
+
+  .section-title {
+    text-align: center;
+    font-size: 32px;
+    margin: 20px 0;
+    font-weight: bold;
+  }
+
+  .page-layout {
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;
+  }
+
+  .promotions-section {
+    flex: 3;
+    background-color: #004080; /* темно-синий фон */
+    padding: 20px;
+    border-radius: 4px;
+
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 20px;
+  }
+
+  .promotion-item {
+    background-color: white;
+    border-radius: 4px;
+    overflow: hidden;
+  }
+
+  .promotion-item img {
+    width: 100%;
+    height: 150px;
+    object-fit: cover;
+  }
+
+  .promotion-info {
+    padding: 10px;
+  }
+
+  .promotion-name {
+    font-size: 18px;
+    font-weight: bold;
+    margin-bottom: 5px;
+  }
+
+  .promotion-date {
+    font-size: 14px;
+    color: #555;
+    margin-bottom: 10px;
+  }
+
+  .promotion-description {
+    font-size: 14px;
+  }
+
+ .right-banners {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: flex-end;
+}
+
+.right-banners img,
+.right-banners .banner-placeholder {
+  width: 150px;
+  height: 250px;
+  object-fit: cover;
+  border-radius: 4px;
+}
+
+.banner-placeholder {
+  background-color: #ccc;
+  color: #666;
+  font-weight: bold;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+</style>
+
+<!-- 🔷 Большой баннер -->
+{% if main_banner %}
+  <img src="{{ main_banner.url }}" alt="Баннер" class="main-banner">
+{% else %}
+  <div class="main-banner" style="background-color: #ccc; display: flex; align-items: center; justify-content: center; color: #666; font-weight: bold;">
+    БАННЕР
+  </div>
+{% endif %}
+
+<!-- 🔷 Заголовок -->
+<div class="section-title">Акции и Скидки</div>
+
+<!-- 🔷 Основная разметка страницы -->
+<div class="page-layout">
+
+  <!-- 🔷 Блок акций -->
+  <div class="promotions-section">
+    {% for promo in promotions %}
+      <div class="promotion-item">
+        {% if promo.main_image %}
+          <img src="{{ promo.main_image.url }}" alt="{{ promo.name_about }}">
+        {% else %}
+          <div style="width:100%; height:150px; background-color:#ccc; display:flex; align-items:center; justify-content:center; color:#666; font-weight:bold;">
+            ФОТО
+          </div>
+        {% endif %}
+
+        <div class="promotion-info">
+          <div class="promotion-name">{{ promo.name_about }}</div>
+          <a href="{% url 'action_detail' promo.id %}">{{ promo.name_about }}</a>
+          <div class="promotion-date">Дата публикации: {{ promo.date_publication }}</div>
+          <div class="promotion-description">{{ promo.description|safe }}</div>
+        </div>
+      </div>
+    {% empty %}
+      <p style="color:white;">Нет акций</p>
+    {% endfor %}
+  </div>
+
+  <!-- 🔷 Блок правых баннеров -->
+
+   {% include 'includes/right_banners.html' %}
+
+</div>
+
+{% endblock %}

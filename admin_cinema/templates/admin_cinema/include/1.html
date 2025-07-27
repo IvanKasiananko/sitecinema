@@ -1,0 +1,9 @@
+<div class="banner-form">
+  <div class="preview"></div>
+  <button type="button" class="close-btn" onclick="this.closest('.banner-form').remove();">×</button>
+
+  <input type="file" name="{{ prefix }}-__prefix__-image_main" onchange="previewImage(this)">
+  <input type="url" name="{{ prefix }}-__prefix__-url_banner" placeholder="Ссылка">
+  <input type="text" name="{{ prefix }}-__prefix__-text_banner" placeholder="Текст">
+  <input type="checkbox" name="{{ prefix }}-__prefix__-DELETE" style="display:none;">
+</div>

@@ -1,0 +1,37 @@
+
+{% extends 'admin_base.html'%}
+{% load static %}
+{% block content %}
+
+<div class="container">
+  <form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+
+    <div class="form-error">{{ form.non_field_errors }}</div>
+
+    <!-- FLEX-КОНТЕЙНЕР -->
+    <div style="display: flex; gap: 40px;">
+
+      <!-- Левый столбец -->
+      <div style="flex: 1;">
+        {% for f in form.visible_fields|slice:":7" %}
+          <p><label class="form-label" for="{{ f.id_for_label }}">{{ f.label }}: </label>{{ f }}</p>
+          <div class="form-error">{{ f.errors }}</div>
+        {% endfor %}
+      </div>
+
+      <!-- Правый столбец -->
+      <div style="flex: 1;">
+        {% for f in form.visible_fields|slice:"7:" %}
+          <p><label class="form-label" for="{{ f.id_for_label }}">{{ f.label }}: </label>{{ f }}</p>
+          <div class="form-error">{{ f.errors }}</div>
+        {% endfor %}
+      </div>
+
+    </div>
+
+    <p><button type="submit" name="value1">Добавить</button></p>
+  </form>
+</div>
+
+{% endblock %}

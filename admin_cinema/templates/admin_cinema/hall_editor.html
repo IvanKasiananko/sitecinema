@@ -1,0 +1,127 @@
+{% extends 'admin_base.html'%}
+{% block content%}
+<style>
+  .hall-wrapper {
+    display: grid;
+    grid-template-columns: 30px auto;
+    grid-gap: 4px;
+    margin-top: 20px;
+  }
+
+  .corner {
+    width: 30px;
+    height: 30px;
+  }
+
+  .column-numbers {
+    display: grid;
+    grid-template-columns: repeat(15, 30px);
+  }
+
+  .col-num {
+    text-align: center;
+    font-weight: bold;
+    height: 30px;
+    line-height: 30px;
+  }
+
+  .rows {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .row-num {
+    width: 30px;
+    height: 30px;
+    text-align: center;
+    line-height: 30px;
+    font-weight: bold;
+  }
+
+  .row-seats {
+    display: grid;
+    grid-template-columns: repeat(15, 30px);
+    grid-gap: 4px;
+  }
+
+  .seat {
+    width: 30px;
+    height: 30px;
+    border: 1px solid #ccc;
+    background-color: lightgray;
+    cursor: pointer;
+  }
+
+  .seat.active {
+    background-color: green;
+  }
+</style>
+<h2>Редактирование зала</h2>
+<div class="hall-wrapper">
+  <div class="corner"></div> <!-- верхний левый угол -->
+
+  <!-- Нумерация колонок -->
+  <div class="column-numbers">
+    {% for i in 1|to:15 %}
+      <div class="col-num">{{ i }}</div>
+    {% endfor %}
+  </div>
+
+  <div class="rows">
+    {% for row in 0|to:14 %}
+      <!-- Номер ряда -->
+      <div class="row-num">{{ row|add:1 }}</div>
+
+      <!-- 15 мест в ряду -->
+      <div class="row-seats">
+        {% for col in 0|to:14 %}
+          <div class="seat" data-row="{{ row }}" data-col="{{ col }}"></div>
+        {% endfor %}
+      </div>
+    {% endfor %}
+  </div>
+</div>
+
+<button onclick="saveScheme()">Сохранить</button>
+
+<form id="save-form" method="POST" style="display: none;">
+  {% csrf_token %}
+  <input type="hidden" name="scheme" id="scheme-input">
+</form>
+<script>
+  // Создание сетки 15x15
+  const editor = document.getElementById("hall-editor");
+  for (let row = 0; row < 15; row++) {
+    for (let col = 0; col < 15; col++) {
+      const div = document.createElement("div");
+      div.className = "seat";
+      div.dataset.row = row;
+      div.dataset.col = col;
+
+      div.addEventListener("click", () => {
+        div.classList.toggle("active");
+      });
+
+      editor.appendChild(div);
+    }
+  }
+
+  function saveScheme() {
+    const seats = document.querySelectorAll(".seat");
+    const scheme = Array.from({ length: 15 }, () => Array(15).fill(0));
+
+    seats.forEach(seat => {
+      const row = +seat.dataset.row;
+      const col = +seat.dataset.col;
+      if (seat.classList.contains("active")) {
+        scheme[row][col] = 1;
+      }
+    });
+
+    document.getElementById("scheme-input").value = JSON.stringify(scheme);
+    document.getElementById("save-form").submit();
+  }
+</script>
+
+{% endblock %}

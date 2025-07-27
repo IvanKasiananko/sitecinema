@@ -1,0 +1,14 @@
+{% extends 'admin_base.html'%}
+{% block content%}
+<!--  <form action="{% url 'create_film' %}" >-->
+<!--   <button>На страницу</button>-->
+<!--  </form>-->
+    <a href="{% url 'pages' post_id=1 %} " >Главная страница</a>
+    <a href="{% url 'pages' post_id=2 %} ">Новости</a>
+    <a href="{% url 'pages' post_id=3 %} ">Кафе -бар</a>
+    <a href="{% url 'pages' post_id=4 %} ">VIP-зал</a>
+    <a href="{% url 'pages' post_id=5 %} ">Реклама</a>
+    <a href="{% url 'pages' post_id=6 %} ">Детская комната</a>
+    <a href="{% url 'pages' post_id=7 %} ">Контакты</a>
+
+{% endblock %}

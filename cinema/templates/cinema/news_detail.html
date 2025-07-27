@@ -1,0 +1,134 @@
+{% extends 'cinema_base.html' %}
+{% block content %}
+
+<style>
+  .main-banner {
+    width: 100%;
+    max-height: 400px;
+    object-fit: cover;
+    margin-bottom: 20px;
+  }
+
+  .action-detail-container {
+    display: flex;
+    gap: 20px;
+    margin: 20px;
+    align-items: flex-start;
+  }
+
+  .action-detail-content {
+    flex: 3;
+    background-color: #004080; /* синий фон */
+    border-radius: 4px;
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    color: white;
+  }
+
+  .action-name {
+    font-size: 28px;
+    font-weight: bold;
+    margin: 0;
+  }
+
+  .action-main {
+    display: flex;
+    gap: 15px;
+    align-items: flex-start;
+  }
+
+  .action-main img {
+    width: 300px;
+    height: 200px;
+    object-fit: cover;
+    border-radius: 4px;
+  }
+
+  .action-text {
+    flex: 1;
+  }
+
+  .action-date {
+    font-size: 14px;
+    margin-bottom: 10px;
+    color: #cce5ff;
+  }
+
+  .action-description {
+    font-size: 16px;
+  }
+
+  .right-banners {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .right-banners img, .banner-placeholder {
+    width: 100%;
+    height: 150px;
+    object-fit: cover;
+    border-radius: 4px;
+  }
+
+  .banner-placeholder {
+    background-color: #ccc;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #666;
+    font-weight: bold;
+  }
+</style>
+
+{% if action.main_image %}
+  <img src="{{ action.main_image.url }}" alt="{{ action.name_about }}" class="main-banner">
+{% else %}
+  <div class="main-banner" style="background-color:#0056b3; display:flex; align-items:center; justify-content:center; color:#cce5ff; font-weight:bold;">
+    БАННЕР
+  </div>
+{% endif %}
+
+<div class="action-detail-container">
+
+  <!-- 🔷 Блок акции -->
+  <div class="action-detail-content">
+    <h1 class="action-name">{{ action.name_about }}</h1>
+
+    <div class="action-main">
+      {% if action.main_image %}
+        <img src="{{ action.main_image.url }}" alt="{{ action.name_about }}">
+      {% else %}
+        <div style="width:300px; height:200px; background-color:#0056b3; display:flex; align-items:center; justify-content:center; color:#cce5ff; font-weight:bold; border-radius:4px;">
+          ФОТО
+        </div>
+      {% endif %}
+
+      <div class="action-text">
+        <div class="action-date">Дата публикации: {{ action.date_publication }}</div>
+        <div class="action-description">{{ action.description|safe }}</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 🔷 Правая колонка: 3 баннера -->
+  <div class="right-banners">
+    {% for banner in side_banners %}
+      {% if banner.image_main %}
+        <img src="{{ banner.image_main.url }}" alt="Баннер">
+      {% else %}
+        <div class="banner-placeholder">БАННЕР</div>
+      {% endif %}
+    {% endfor %}
+
+    {% for i in placeholders_needed %}
+      <div class="banner-placeholder">БАННЕР</div>
+    {% endfor %}
+  </div>
+
+</div>
+
+{% endblock %}

@@ -1,0 +1,157 @@
+{% extends 'cinema_base.html' %}
+{% block content %}
+
+<style>
+  .main-banner-container {
+    width: 100vw;
+    position: relative;
+    left: 50%;
+    right: 50%;
+    margin-left: -50vw;
+    margin-right: -50vw;
+  }
+
+  .main-banner {
+    width: 100%;
+    max-height: 400px;
+    object-fit: cover;
+    display: block;
+  }
+
+  .page-layout {
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 15px;
+  }
+
+  .cafe-section {
+    flex: 3;
+  }
+
+  .cafe-title {
+    text-align: center;
+    font-size: 32px;
+    margin: 20px 0;
+    font-weight: bold;
+  }
+
+  .cafe-description {
+    margin-bottom: 20px;
+  }
+
+  .gallery {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+
+  .gallery img {
+    width: calc(33% - 10px);
+    height: 150px;
+    object-fit: cover;
+    border-radius: 4px;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+  }
+
+  th, td {
+    border: 1px solid #ccc;
+    padding: 8px;
+    text-align: center;
+  }
+
+  th {
+    background-color: #f0f0f0;
+  }
+
+.right-banners {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: flex-end;
+}
+
+.right-banners img,
+.right-banners .banner-placeholder {
+  width: 150px;
+  height: 250px;
+  object-fit: cover;
+  border-radius: 4px;
+}
+
+.banner-placeholder {
+  background-color: #ccc;
+  color: #666;
+  font-weight: bold;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+</style>
+
+<!-- 🔹 Баннер сверху на всю ширину -->
+<div class="main-banner-container">
+  {% if cafe.main_image %}
+    <img src="{{ cafe.main_image.url }}" alt="Баннер" class="main-banner">
+  {% else %}
+    <div class="main-banner" style="background-color: #ccc; display: flex; align-items: center; justify-content: center; color: #666; font-weight: bold; height: 300px;">
+      БАННЕР
+    </div>
+  {% endif %}
+</div>
+
+<div class="page-layout">
+
+  <!-- 🔷 Левая часть (кафе) -->
+  <div class="cafe-section">
+    <h1 class="cafe-title">{{ cafe.name_about }}</h1>
+
+    <div class="cafe-description">
+      {{ cafe.description|safe }}
+    </div>
+
+    <!-- Галерея -->
+    <div class="gallery">
+      {% for photo in gallery_photos %}
+        <img src="{{ photo.image.url }}" alt="Фото кафе">
+      {% empty %}
+        <p>Нет фото</p>
+      {% endfor %}
+    </div>
+
+    <!-- Меню (пример таблицы) -->
+    <h2>Меню</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Блюдо</th>
+          <th>Описание</th>
+          <th>Цена</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Пример блюда</td>
+          <td>Описание блюда</td>
+          <td>100 грн</td>
+        </tr>
+        <!-- блюда здесь -->
+      </tbody>
+    </table>
+
+  </div>
+
+  <!-- 🔷 Правая часть (баннеры) -->
+  {% include 'includes/right_banners.html' %}
+
+</div>
+
+{% endblock %}

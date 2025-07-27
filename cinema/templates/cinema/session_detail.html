@@ -1,0 +1,74 @@
+{% block content %}
+<h2>Сеанс: {{ session.film.title }} ({{ session.date_session }} {{ session.time_session }})</h2>
+<h3>Зал: {{ session.hall.name_hall }}</h3>
+
+<style>
+  table.seats {
+    border-collapse: collapse;
+  }
+
+  table.seats td {
+    width: 40px;
+    height: 40px;
+    text-align: center;
+    vertical-align: middle;
+    border: 1px solid #999;
+  }
+
+  .free {
+    background-color: #a6f3a6;
+  }
+
+  .booked {
+    background-color: #f3d86f;
+  }
+
+  .bought {
+    background-color: #f36f6f;
+  }
+
+  .disabled {
+    background-color: #ccc;
+  }
+</style>
+
+<form method="post">
+  {% csrf_token %}
+
+  <table class="seats">
+    {% for r in rows %}
+      <tr>
+        {% for c in cols %}
+          {% with ticket=ticket_map|default:{}|dict_get:(r,c) %}
+            {% if ticket %}
+              <td class="{% if ticket.status == 'free' %}free{% elif ticket.status == 'booked' %}booked{% elif ticket.status == 'bought' %}bought{% else %}disabled{% endif %}">
+                {% if ticket.status == 'free' %}
+                  <input type="checkbox" name="tickets" value="{{ ticket.id }}">
+                {% else %}
+                  <input type="checkbox" disabled>
+                {% endif %}
+                {{ r }}-{{ c }}
+              </td>
+            {% else %}
+              <td class="disabled">---</td>
+            {% endif %}
+          {% endwith %}
+        {% endfor %}
+      </tr>
+    {% endfor %}
+  </table>
+
+  <div style="margin-top: 15px;">
+    <label>
+      <input type="radio" name="action" value="booked" checked>
+      Забронировать
+    </label>
+    <label>
+      <input type="radio" name="action" value="bought">
+      Купить
+    </label>
+  </div>
+
+  <button type="submit" style="margin-top: 10px;">Подтвердить</button>
+</form>
+{% endblock %}

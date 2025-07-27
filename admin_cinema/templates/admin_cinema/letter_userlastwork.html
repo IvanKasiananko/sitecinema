@@ -1,0 +1,57 @@
+{% extends 'admin_base.html' %}
+{% load static %}
+
+{% block content %}
+<h2>Выбор пользователей</h2>
+
+<table id="user_table" class="display" width="100%"></table>
+
+<button id="send_selected" class="btn btn-success mt-3">Отправить выбранных</button>
+
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<script src="{% static 'ajax_datatable/js/utils.js' %}"></script>
+
+<script>
+    $(document).ready(function () {
+        AjaxDatatableViewUtils.initialize_table(
+            $('#user_table'),
+            "{% url 'users_ajax' %}",
+            {
+                processing: true,
+                serverSide: true,
+                autoWidth: false,
+                scrollX: true,
+                order: [[1, 'asc']]
+            },
+            {}
+        );
+
+        $('#send_selected').click(function () {
+            const selected = [];
+            $('.user-checkbox:checked').each(function () {
+                selected.push({
+                    id: this.value,
+                    username: this.dataset.username
+                });
+            });
+
+            if (selected.length === 0) {
+                alert("Выберите хотя бы одного пользователя!");
+                return;
+            }
+
+            if (window.opener) {
+                window.opener.postMessage({
+                    type: "selected_users",
+                    users: selected
+                }, "*");
+                window.close();
+            } else {
+                alert("Родительское окно не найдено.");
+            }
+        });
+    });
+</script>
+{% endblock %}

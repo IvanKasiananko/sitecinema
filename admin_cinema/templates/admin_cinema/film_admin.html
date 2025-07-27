@@ -1,0 +1,30 @@
+{% extends 'admin_base.html' %}
+{% block content %}
+<a href="{% url 'create_film' %}">Добавить фильм</a>
+<h2>Список текущих фильмов</h2>
+<div style="display: flex; flex-wrap: wrap; gap: 20px;">
+    {% for film in current_films %}
+        <div style="width: 23%; text-align: center;">
+            <img src="{{ film.main_image.url }}" style="width: 100%; height: auto;" alt="{{ film.name }}">
+           <a href="{% url 'edit_film' film.pk %}">{{ film.name }}</a>
+        </div>
+    {% empty %}
+        <p>Нет текущих фильмов</p>
+    {% endfor %}
+</div>
+
+<hr>
+
+<h2>Список фильмов, которые покажут скоро</h2>
+<div style="display: flex; flex-wrap: wrap; gap: 20px;">
+    {% for film in upcoming_films %}
+        <div style="width: 23%; text-align: center;">
+            <img src="{{ film.main_image.url }}" style="width: 100%; height: auto;" alt="{{ film.name }}">
+            <a href="{% url 'edit_film' film.pk %}">{{ film.name }}</a>
+        </div>
+    {% empty %}
+        <p>Нет предстоящих фильмов</p>
+    {% endfor %}
+</div>
+
+{% endblock %}

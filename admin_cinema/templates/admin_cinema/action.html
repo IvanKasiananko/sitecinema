@@ -1,0 +1,73 @@
+{% extends 'admin_base.html'%}
+{% block content%}
+<a href="{% url 'create_news_action' %}?name=action">Добавить акцию</a>
+
+<title>Акции</title>
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+
+<h2>Список акций</h2>
+
+<table id="news-table" class="display" style="width:100%">
+    <thead>
+        <tr>
+            <th>Название</th>
+            <th>Дата создания</th>
+            <th>Статус</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody></tbody>
+</table>
+
+<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+
+<script>
+$(function() {
+  const table = $('#news-table').DataTable({
+    ajax: {
+      url: "{% url 'news_data' %}",
+      dataSrc: 'data',
+      error: function(xhr, status, err) {
+        console.error('AJAX error:', status, err, xhr.responseText);
+        alert('Ошибка при загрузке данных. Смотри консоль.');
+      }
+    },
+    columns: [
+      { data: 'name_about' },
+      { data: 'date_create' },
+      { data: 'status' },
+      {
+        data: 'id',
+        orderable: false,
+        searchable: false,
+        render: function(id) {
+          // Правильная ссылка на редактирование
+          return `
+            <a href="{{ edit_url_base }}${id}/edit/" title="Редактировать">✏️</a>
+            &nbsp;
+            <a href="#" class="delete-news" data-id="${id}" title="Удалить">🗑️</a>
+          `;
+        }
+      }
+    ],
+    order: [[1, 'desc']]
+  });
+
+  // Удаление
+  $('#news-table tbody').on('click', '.delete-news', function(e) {
+    e.preventDefault();
+    const id = $(this).data('id');
+    if (!confirm('Удалить новость?')) return;
+    $.ajax({
+      url: `/admin/delete_news/${id}/`,  // учтён префикс /admin/
+      type: 'POST',
+      headers: {'X-CSRFToken': '{{ csrf_token }}'},
+      success: () => table.ajax.reload(null, false),
+      error: () => alert('Ошибка при удалении.')
+    });
+  });
+});
+</script>
+
+{% endblock %}

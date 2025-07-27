@@ -1,0 +1,124 @@
+{% extends 'cinema_base.html' %}
+{% block content %}
+
+<style>
+  .main-photo {
+    width: 100%;
+    max-height: 400px;
+    object-fit: cover;
+  }
+
+  .green-btn {
+    display: inline-block;
+    background-color: green;
+    color: white;
+    padding: 10px 20px;
+    text-decoration: none;
+    font-weight: bold;
+    border-radius: 4px;
+    margin: 10px 0;
+  }
+
+  .cinema-layout {
+    display: flex;
+    gap: 20px;
+  }
+
+  .left-banner {
+    width: 300px;
+  }
+
+  .description-section {
+    flex: 1;
+  }
+
+  .carousel {
+    display: flex;
+    overflow-x: auto;
+    gap: 10px;
+    padding: 10px 0;
+  }
+
+  .carousel img {
+    height: 150px;
+    border-radius: 4px;
+  }
+
+  .hall-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+  }
+
+  .session-list {
+    margin-top: 20px;
+  }
+
+  .session-item {
+    border: 1px solid #ccc;
+    padding: 8px;
+    margin-bottom: 5px;
+    border-radius: 4px;
+  }
+</style>
+
+<!-- 🔷 Главное фото -->
+<img src="{{ cinema.logo.url }}" alt="{{ cinema.name_cinema }}" class="main-photo">
+
+<!-- 🔷 Зеленая кнопка Расписание сеансов -->
+<a href="{% url 'schedule' %}" class="green-btn">Расписание сеансов</a>
+
+<!-- 🔷 Блок с баннером слева и описанием -->
+<div class="cinema-layout">
+  <div class="left-banner">
+    <img src="/static/images/banner.jpg" alt="Баннер" style="width:100%;">
+  </div>
+
+  <div class="description-section">
+    <!-- 🔷 Описание кинотеатра -->
+    <h2>О кинотеатре</h2>
+    <div>{{ cinema.seo_text|safe }}</div>
+
+    <!-- 🔷 Условия -->
+    <h3>Условия</h3>
+    <div>{{ cinema.conditions|safe }}</div>
+  </div>
+</div>
+
+<!-- 🔷 Карусель баннеров -->
+<h3>Наши баннеры</h3>
+<div class="carousel">
+  {% for banner in banners %}
+    <img src="{{ banner.image.url }}" alt="{{ banner.title }}">
+  {% endfor %}
+</div>
+
+<!-- 🔷 Количество залов -->
+<h3>Количество залов: {{ halls.count }}</h3>
+
+<!-- 🔷 Перечень залов -->
+<div class="hall-list">
+  {% for hall in halls %}
+    <div>
+      <strong>{{ hall.name_hall_uk }}</strong><br>
+      {{ hall.description }}
+    </div>
+  {% endfor %}
+</div>
+
+<!-- 🔷 Смотрите сегодня -->
+<h3>Смотрите сегодня</h3>
+<div class="session-list">
+  {% for session in sessions_today %}
+    <div class="session-item">
+      {{ session.film.name }} | {{ session.time_session|time:"H:i" }} | {{ session.type_film }}
+    </div>
+  {% empty %}
+    <p>Сегодня сеансов нет.</p>
+  {% endfor %}
+</div>
+
+<!-- 🔷 Зеленая кнопка Расписание всех сеансов -->
+<a href="{% url 'schedule'  %}" class="green-btn">Расписание всех сеансов</a>
+
+{% endblock %}

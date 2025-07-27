@@ -1,0 +1,16 @@
+<div class="right-banners">
+  {% for banner in side_banners %}
+    {% if banner %}
+      <img src="{{ banner.image_main.url }}" alt="Баннер">
+    {% else %}
+      <div class="banner-placeholder">БАННЕР</div>
+    {% endif %}
+  {% endfor %}
+
+  {# Добавляем placeholder, если баннеров меньше 3 #}
+  {% for i in "123"|slice:":3" %}
+    {% if forloop.counter > side_banners|length %}
+      <div class="banner-placeholder">БАННЕР</div>
+    {% endif %}
+  {% endfor %}
+</div>

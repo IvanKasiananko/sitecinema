@@ -1,0 +1,14 @@
+<div class="banner-form">
+  {% if form.instance.pk %}
+    <div class="preview" style="background-image: url('{{ form.instance.image_main.url }}')"></div>
+  {% else %}
+    <div class="preview"></div>
+  {% endif %}
+
+  <button type="button" class="close-btn" onclick="this.closest('.banner-form').remove();">×</button>
+
+  {{ form.image_main }}
+  {{ form.url_banner }}
+  {{ form.text_banner }}
+  {{ form.DELETE }}
+</div>

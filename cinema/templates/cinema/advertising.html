@@ -1,0 +1,230 @@
+{% extends 'cinema_base.html' %}
+{% block content %}
+
+<style>
+  .page-layout {
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;
+  }
+
+  .ad-section {
+    flex: 3;
+  }
+
+  .ad-title {
+    text-align: center;
+    font-size: 32px;
+    margin: 20px 0;
+    font-weight: bold;
+  }
+
+  .ad-description {
+    margin-bottom: 20px;
+  }
+  .carousel-container {
+  position: relative;
+  overflow: hidden;
+  margin-bottom: 30px;
+  max-width: 600px; /* или фиксированная ширина */
+  margin-left: auto;
+  margin-right: auto; /* чтобы выровнять по центру */
+}
+
+
+
+  .carousel-slide {
+    display: flex;
+    transition: transform 0.5s ease-in-out;
+    width: 100%;
+  }
+
+  .carousel-slide img {
+    width: 100%; /* картинка на всю ширину контейнера */
+    height: 200px;
+    border-radius: 4px;
+    flex-shrink: 0;
+  }
+
+  .prev, .next {
+    cursor: pointer;
+    position: absolute;
+    top: 50%;
+    padding: 10px;
+    margin-top: -22px;
+    color: black;
+    font-weight: bold;
+    font-size: 20px;
+    background-color: rgba(255, 255, 255, 0.6);
+    border-radius: 50%;
+    z-index: 10;
+    user-select: none;
+  }
+
+  .prev { left: 10px; }
+  .next { right: 10px; }
+
+  .carousel-dots {
+    text-align: center;
+    margin-top: 10px;
+  }
+
+  .dot {
+    height: 12px;
+    width: 12px;
+    margin: 0 4px;
+    background-color: #bbb;
+    border-radius: 50%;
+    display: inline-block;
+    cursor: pointer;
+  }
+
+  .dot.active {
+    background-color: #717171;
+  }
+
+  .video-block {
+    margin-top: 20px;
+    text-align: center;
+  }
+
+  .video-block iframe {
+    width: 100%;
+    height: 400px;
+    border: none;
+    border-radius: 4px;
+  }
+
+  .main-banner {
+    width: 100%;
+    max-height: 400px;
+    object-fit: cover;
+    display: block;
+    border-radius: 4px;
+    margin-bottom: 20px;
+  }
+
+.right-banners {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: flex-end; /* Прижать баннеры к правому краю */
+  /* width: 100%; если нужно, чтобы блок занимал всю ширину родителя */
+}
+
+.right-banners img,
+.right-banners .banner-placeholder {
+  width: 150px; /* Меняй ширину по желанию: 150px, 250px, auto и т.п. */
+  height: 250px;
+  object-fit: cover;
+  border-radius: 4px;
+}
+
+.banner-placeholder {
+  background-color: #ccc;
+  color: #666;
+  font-weight: bold;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+</style>
+
+<!-- 🔹 Баннер сверху -->
+{% if main_image %}
+  <img src="{{ main_image.url }}" alt="Баннер" class="main-banner">
+{% else %}
+  <div class="main-banner" style="background-color: #ccc; display: flex; align-items: center; justify-content: center; color: #666; font-weight: bold;">
+    БАННЕР
+  </div>
+{% endif %}
+
+<div class="page-layout">
+
+  <!-- 🟩 Левая часть -->
+  <div class="ad-section">
+
+    <h1 class="ad-title">{{ title }}</h1>
+
+    <div class="ad-description">
+      {{ description|safe }}
+    </div>
+
+    {% if gallery_images %}
+      <!-- 🔷 Карусель галереи -->
+      <h2 align="center">Фотогалерея</h2>
+      <div class="carousel-container" id="carousel">
+        <div class="carousel-slide">
+          {% for image in gallery_images %}
+            <img src="{{ image.image.url }}" alt="">
+          {% endfor %}
+        </div>
+        <a class="prev" onclick="plusSlides(-1)">&#10094;</a>
+        <a class="next" onclick="plusSlides(1)">&#10095;</a>
+        <div class="carousel-dots">
+          {% for image in gallery_images %}
+            <span class="dot" onclick="currentSlide({{ forloop.counter0 }})"></span>
+          {% endfor %}
+        </div>
+      </div>
+    {% else %}
+      <p>Нет изображений в галерее.</p>
+    {% endif %}
+
+  </div>
+
+  <!-- 🟦 Правая часть -->
+  {% include 'includes/right_banners.html' %}
+
+</div>
+
+<!-- Скрипт карусели -->
+<script>
+  let currentIndex = 0;
+
+  function showSlide(index) {
+    const slides = document.querySelector('.carousel-slide');
+    const dots = document.querySelectorAll('.dot');
+    const totalSlides = dots.length;
+
+    if (index >= totalSlides) currentIndex = 0;
+    else if (index < 0) currentIndex = totalSlides - 1;
+    else currentIndex = index;
+
+    slides.style.transform = 'translateX(' + (-currentIndex * 100) + '%)';
+
+    dots.forEach(dot => dot.classList.remove('active'));
+    dots[currentIndex].classList.add('active');
+  }
+
+  function plusSlides(n) {
+    showSlide(currentIndex + n);
+  }
+
+  function currentSlide(index) {
+    showSlide(index);
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    showSlide(0);
+
+    const carousel = document.getElementById('carousel');
+    let startX;
+
+    carousel.addEventListener('touchstart', (e) => {
+      startX = e.touches[0].clientX;
+    });
+
+    carousel.addEventListener('touchend', (e) => {
+      let endX = e.changedTouches[0].clientX;
+      if (startX - endX > 50) plusSlides(1);
+      else if (endX - startX > 50) plusSlides(-1);
+    });
+
+    setInterval(() => {
+      plusSlides(1);
+    }, 5000);
+  });
+</script>
+
+{% endblock %}

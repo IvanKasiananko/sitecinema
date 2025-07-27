@@ -1,0 +1,431 @@
+{% extends 'admin_base.html' %}
+{% load static %}
+
+{% block content %}
+<style>
+    .add-button1 {
+        transform: translateY(-50%);
+        background-color: transparent;
+        border: 1px solid #ccc;
+        padding: 8px 14px;
+        border-radius: 6px;
+        font-size: 16px;
+        text-decoration: none;
+        color: #333;
+        transition: background-color 0.2s ease-in-out;
+    }
+
+    .add-button1:hover {
+        background-color: #f1f1f1;
+    }
+
+    .add-button1 .plus {
+        color: green;
+        font-weight: bold;
+        margin-right: 6px;
+        font-size: 20px;
+        vertical-align: middle;
+    }
+</style>
+
+<h1>карточка кинотеатра</h1>
+
+<form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    {{ image_formset.management_form }}
+
+    <!-- Язык: радиокнопки справа сверху -->
+    <div style="display: flex; justify-content: flex-end; margin-bottom: 10px; gap: 20px;">
+        {% for radio in form.language %}
+        <label style="display: flex; align-items: center; gap: 5px; cursor: pointer;">
+            {{ radio.tag }} {{ radio.choice_label }}
+        </label>
+        {% endfor %}
+    </div>
+    <!-- Название и описание -->
+    <div id="uk-fields" class="lang-block">
+        <p>
+            <label class="lang-label" data-uk="Назва кинотеатру(укр):" data-ru="Название кинотеатра (рус):">Назва
+                (укр):</label>
+            {{ form.name_cinema_uk }}
+        </p>
+        <p>
+            <label class="lang-label" data-uk="Опис (укр):" data-ru="Описание (рус):">Опис (укр):</label>
+            {{ form.seo_text_uk }}
+        </p>
+        <p>
+            <label class="lang-label" data-uk="Умови (укр):" data-ru="Условия (рус):">Умови (укр):</label>
+            {{ form.conditions_uk }}
+        </p>
+    </div>
+
+    <div id="ru-fields" class="lang-block" style="display:none;">
+        <p>
+            <label class="lang-label" data-uk="Назва (укр):" data-ru="Название (рус):">Название (рус):</label>
+            {{ form.name_cinema_ru }}
+        </p>
+        <p>
+            <label class="lang-label" data-uk="Опис (укр):" data-ru="Описание (рус):">Описание (рус):</label>
+            {{ form.seo_text_ru }}
+        </p>
+        <p>
+            <label class="lang-label" data-uk="Умови (укр):" data-ru="Условия (рус):">Умови (укр):</label>
+            {{ form.conditions_ru }}
+        </p>
+    </div>
+
+    <!-- Блок: Схема зала -->
+    <p><label class="lang-label" data-uk="Схема залу:" data-ru="Схема зала:">Схема зала:</label></p>
+    <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 15px;">
+        <div style="width: 120px; height: 120px; background-color: #ccc; display: flex; justify-content: center; align-items: center; border: 1px solid #aaa;">
+            {% if form.instance.logo %}
+            <img id="shemePreview" src="{{ form.instance.logo.url }}"
+                 style="max-width: 100%; max-height: 100%;"/>
+            {% else %}
+            <img id="shemePreview" src="#" style="display:none; max-width: 100%; max-height: 100%;"/>
+            {% endif %}
+        </div>
+
+        <div style="display: flex; gap: 10px; align-items: center;">
+            {{ form.logo }}
+            <button type="button" onclick="document.querySelector('input[name=logo]').click()">Добавить</button>
+            <button type="button" onclick="removeImage('logo')">Удалить</button>
+        </div>
+    </div>
+
+    <p><label class="lang-label" data-uk="Адрес (укр):" data-ru="Адрес (рус):">Адрес:</label></p>
+    {{ form.adress }}
+
+    <p><label class="lang-label" data-uk="Координати (укр):" data-ru="Координаты (рус):">Координаты:</label></p>
+    {{ form.coord }}
+
+    <!-- Блок: Верхний баннер -->
+    <p><label class="lang-label" data-uk="Верхній банер:" data-ru="Верхний баннер:">Верхний баннер:</label></p>
+    <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 15px;">
+        <div style="width: 120px; height: 120px; background-color: #ccc; display: flex; justify-content: center; align-items: center; border: 1px solid #aaa;">
+            {% if form.instance.banner %}
+            <img id="bannerPreview" src="{{ form.instance.banner.url }}"
+                 style="max-width: 100%; max-height: 100%;"/>
+            {% else %}
+            <img id="bannerPreview" src="#" style="display:none; max-width: 100%; max-height: 100%;"/>
+            {% endif %}
+        </div>
+
+        <div style="display: flex; gap: 10px; align-items: center;">
+            {{ form.banner }}
+            <button type="button" onclick="document.querySelector('input[name=banner]').click()">Добавить</button>
+            <button type="button" onclick="removeImage('banner')">Удалить</button>
+        </div>
+    </div>
+
+
+    <!-- Галерея -->
+    <h4 class="lang-label" data-uk="Галерея:" data-ru="Галерея:">Галерея:</h4>
+    <div id="galleryForms" style="display: flex; gap: 15px; overflow-x: auto; padding-bottom: 10px;">
+        {% for image_form in image_formset %}
+        <div class="gallery-form"
+             style="position: relative; display: flex; flex-direction: column; align-items: center; gap: 5px;">
+            {{ image_form.id }}
+
+            <button type="button"
+                    style="position: absolute; top: 2px; right: 2px; background: #f00; color: #fff; border: none; border-radius: 50%; width: 20px; height: 20px; cursor: pointer; font-weight: bold; line-height: 18px; padding: 0;"
+                    onclick="removeGalleryImage(this)">
+                ×
+            </button>
+
+            <div style="width: 120px; height: 120px; background-color: #ccc; display: flex; justify-content: center; align-items: center; border: 1px solid #aaa; overflow: hidden;">
+                {% if image_form.instance.image %}
+                <img class="galleryPreview" src="{{ image_form.instance.image.url }}"
+                     style="max-width: 100% !important; max-height: 100% !important; object-fit: contain !important; display: block !important;"/>
+                {% else %}
+                <img class="galleryPreview"
+                     style="display: none !important; max-width: 100% !important; max-height: 100% !important; object-fit: contain !important;"/>
+                <!--            <span style="color: #666;">нет</span>-->
+                {% endif %}
+            </div>
+
+            {{ image_form.image }}
+            <button type="button" onclick="this.previousElementSibling.click()">Добавить</button>
+
+            {% if image_form.DELETE %}
+            <label style="display:none;">{{ image_form.DELETE }}</label>
+            {% endif %}
+        </div>
+        {% endfor %}
+        <button type="button" id="addGalleryFormBtn" class="add-button">+ Добавить форму</button>
+    </div>
+
+    {% if cinema.id %}
+    <script>
+        const cinemaId = "{{ cinema.id }}";
+    </script>
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+    <table id="news-table" class="display" style="width:100%">
+        <thead>
+        <tr>
+            <th>Название</th>
+            <th>Дата создания</th>
+            <th>Статус</th>
+            <th></th>
+        </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+
+    <p style="text-align: center; margin-top: 10px;">
+        <a href="{% url 'create_hall' cinema.id %}" class="add-button1">
+            <span class="plus">+</span>Создать зал
+        </a>
+    </p>
+
+    {% endif %}
+    <!-- SEO -->
+    <h4>SEO</h4>
+    <div style="display: flex; flex-direction: column; gap: 10px; max-width: 400px;">
+        <p style="margin: 0;">
+            <label style="display: inline-block; width: 130px;">{{ seo_form.seo_url.label }}:</label>
+            {{ seo_form.seo_url }}
+        </p>
+        <p style="margin: 0;">
+            <label style="display: inline-block; width: 130px;">{{ seo_form.seo_title.label }}:</label>
+            {{ seo_form.seo_title }}
+        </p>
+        <p style="margin: 0;">
+            <label style="display: inline-block; width: 130px;">{{ seo_form.seo_keywords.label }}:</label>
+            {{ seo_form.seo_keywords }}
+        </p>
+        <p style="margin: 0;">
+            <label style="display: inline-block; width: 130px;">{{ seo_form.seo_description.label }}:</label>
+            {{ seo_form.seo_description }}
+        </p>
+    </div>
+
+    <!-- Кнопки -->
+    <button type="submit">Сохранить</button>
+</form>
+
+<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Скрываем input[type=file] в галерее и добавляем onchange preview
+        const galleryInputs = document.querySelectorAll('#galleryForms input[type="file"]');
+        galleryInputs.forEach(function (input) {
+            input.style.display = 'none';
+            input.setAttribute('onchange', 'previewGalleryImage(this)');
+        });
+
+        // Обработка переключения языка
+        const languageRadios = document.querySelectorAll('input[name="language"]');
+
+        function updateLanguageLabels(lang) {
+            // Меняем текст меток
+            document.querySelectorAll('.lang-label').forEach(function (label) {
+                const newText = label.getAttribute('data-' + lang);
+                if (newText) {
+                    label.textContent = newText;
+                }
+            });
+
+            // Показываем нужные поля для названия и описания
+            if (lang === 'uk') {
+                document.getElementById('uk-fields').style.display = 'block';
+                document.getElementById('ru-fields').style.display = 'none';
+            } else if (lang === 'ru') {
+                document.getElementById('uk-fields').style.display = 'none';
+                document.getElementById('ru-fields').style.display = 'block';
+            }
+        }
+
+        languageRadios.forEach(function (radio) {
+            radio.addEventListener('change', function () {
+                updateLanguageLabels(this.value);
+            });
+            if (radio.checked) {
+                updateLanguageLabels(radio.value);
+            }
+        });
+
+        // Добавление новой пустой формы в галерею
+        const addBtn = document.getElementById('addGalleryFormBtn');
+        const galleryFormsContainer = document.getElementById('galleryForms');
+
+        addBtn.addEventListener('click', function () {
+            const totalFormsInput = document.querySelector('input[name="form-TOTAL_FORMS"]');
+            let totalForms = parseInt(totalFormsInput.value);
+
+            const lastForm = galleryFormsContainer.querySelector('.gallery-form:last-of-type');
+            if (!lastForm) return;
+
+            // Клонируем последнюю форму
+            const newForm = lastForm.cloneNode(true);
+
+            // Чистим данные в клоне
+            newForm.querySelectorAll('input').forEach(function (input) {
+                if (input.type === 'file') {
+                    input.value = '';
+                } else if (input.type === 'hidden') {
+                    input.value = '';
+                } else if (input.type === 'checkbox') {
+                    input.checked = false;
+                }
+            });
+
+            // Чистим превью
+            const img = newForm.querySelector('.galleryPreview');
+            if (img) {
+                img.src = '';
+                img.style.display = 'none';
+            }
+
+            // Обновляем имена и id полей для нового индекса
+            newForm.querySelectorAll('input, label').forEach(function (el) {
+                ['name', 'id', 'for'].forEach(function (attr) {
+                    if (el.hasAttribute(attr)) {
+                        el.setAttribute(attr, el.getAttribute(attr).replace(/form-(\d)+/, 'form-' + totalForms));
+                    }
+                });
+            });
+
+            // Удаляем поле DELETE, если есть
+            const deleteInput = newForm.querySelector('input[type=checkbox][name$="-DELETE"]');
+            if (deleteInput) {
+                deleteInput.checked = false;
+            }
+
+            // Вставляем новую форму перед кнопкой добавления
+            galleryFormsContainer.insertBefore(newForm, addBtn);
+
+            // Обновляем общее количество форм
+            totalFormsInput.value = totalForms + 1;
+
+            // Прячем input[type=file] новой формы и ставим onchange preview
+            const newFileInput = newForm.querySelector('input[type="file"]');
+            if (newFileInput) {
+                newFileInput.style.display = 'none';
+                newFileInput.setAttribute('onchange', 'previewGalleryImage(this)');
+            }
+        });
+    });
+
+    function previewGalleryImage(input) {
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                const img = input.parentNode.querySelector('.galleryPreview');
+                if (img) {
+                    img.src = e.target.result;
+                    img.style.display = 'block';
+                }
+            }
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+
+    function removeGalleryImage(button) {
+        const formDiv = button.closest('.gallery-form');
+        if (!formDiv) return;
+
+        // Помечаем форму на удаление, если есть поле DELETE
+        const deleteInput = formDiv.querySelector('input[type=checkbox][name$="-DELETE"]');
+        if (deleteInput) {
+            deleteInput.checked = true;
+            formDiv.style.display = 'none';
+        } else {
+            // Иначе просто удаляем форму из DOM и уменьшаем TOTAL_FORMS
+            formDiv.remove();
+            const totalFormsInput = document.querySelector('input[name="form-TOTAL_FORMS"]');
+            totalFormsInput.value = parseInt(totalFormsInput.value) - 1;
+        }
+    }
+
+    function previewImage(input, previewId) {
+        const file = input.files[0];
+        const preview = document.getElementById(previewId);
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                preview.src = e.target.result;
+                preview.style.display = 'block';
+            };
+            reader.readAsDataURL(file);
+        }
+    }
+
+    document.querySelector('input[name=logo]').addEventListener('change', function () {
+        previewImage(this, 'shemePreview');
+    });
+
+    document.querySelector('input[name=banner]').addEventListener('change', function () {
+        previewImage(this, 'bannerPreview');
+    });
+
+    function removeImage(fieldName) {
+        const input = document.querySelector('input[name=' + fieldName + ']');
+        const preview = document.getElementById(fieldName + 'Preview');
+        input.value = '';
+        preview.src = '#';
+        preview.style.display = 'none';
+    }
+
+
+    //вывод таблицы
+    $(function () {
+        const table = $('#news-table').DataTable({
+            ajax: {
+                url: "{% url 'hall_data' %}",
+                data: function (d) {
+                    d.cinema_id = cinemaId;
+                    console.log("Отправка данных в hall_data:", d);  // Это сработает
+                },
+                dataSrc: 'data',
+                error: function (xhr, status, err) {
+                    console.error('AJAX error:', status, err, xhr.responseText);
+                    alert('Ошибка при загрузке данных. Смотри консоль.');
+                }
+            },
+            columns: [  // ← ЭТО ПОЛЕ columns, а не двоеточие `:`
+                {data: 'name_hall'},
+                {data: 'date_create'},
+                {
+                    data: 'id',
+                    orderable: false,
+                    searchable: false,
+                    render: function (id) {
+                        return `
+            <a href="/admin/hall_edit/${id}/" title="Редактировать">✏️</a>
+            &nbsp;
+            <a href="#" class="delete-news" data-id="${id}" title="Удалить">🗑️</a>
+          `;
+                    }
+                }
+            ],
+            order: [[1, 'desc']]
+        });
+
+        $('#news-table tbody').on('click', '.delete-news', function (e) {
+            e.preventDefault();
+            const id = $(this).data('id');
+            if (!confirm('Удалить зал?')) return;
+
+            $.ajax({
+                url: `/admin/hall_delete/${id}/`,
+                type: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                success: function () {
+                    table.ajax.reload(null, false);
+                },
+                error: function (xhr) {
+                    alert('Ошибка при удалении. См. консоль.');
+                    console.error(xhr.responseText);
+                }
+            });
+        });
+    });
+
+</script>
+
+
+{% endblock %}

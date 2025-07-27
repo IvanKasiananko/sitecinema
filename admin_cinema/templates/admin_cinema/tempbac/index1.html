@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>AdminPanell</title>
+</head>
+<body>
+<ul>
+    {% for m in menu %}
+     {% if m.lvl == 2 %}
+      <ul>
+        {{m.title}}
+      </ul>
+     {%else%}
+    <li class="last">
+       {{m.title}}
+    </li>
+     {%endif%}
+
+    {% endfor %}
+
+</ul>
+
+</body>
+</html>

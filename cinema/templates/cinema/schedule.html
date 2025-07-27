@@ -1,0 +1,185 @@
+{% extends 'cinema_base.html' %}
+
+{% block content %}
+<style>
+  body {
+    background-color: white;
+    color: black;
+    font-family: Arial, sans-serif;
+  }
+
+  .main-wrapper {
+    display: flex;
+    gap: 20px;
+  }
+
+  .left-content {
+    flex: 3;
+  }
+
+  .right-banner {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+  }
+
+  .ad-placeholder {
+    width: 100%;
+    height: 300px;
+    border: 2px dashed gray;
+    background-color: #f9f9f9;
+    text-align: center;
+    font-weight: bold;
+    font-size: 18px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 4px;
+  }
+
+  .filters {
+    margin-bottom: 20px;
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+
+  .filters label {
+    font-weight: bold;
+  }
+
+  select, input[type=date] {
+    padding: 4px 6px;
+    min-width: 220px;
+    font-size: 14px;
+  }
+
+  .date-block {
+    margin-bottom: 30px;
+    padding: 10px;
+    border: 2px solid yellow;
+    background-color: #fffbea;
+    border-radius: 4px;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 8px;
+  }
+
+  th, td {
+    border: 1px solid #ccc;
+    padding: 6px 10px;
+    text-align: center;
+  }
+
+  th {
+    background-color: #f0f0f0;
+  }
+
+  button.book-btn {
+    padding: 5px 10px;
+    background-color: #28a745;
+    border: none;
+    color: white;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+
+  button.book-btn:hover {
+    background-color: #218838;
+  }
+</style>
+
+<h1>Расписание сеансов</h1>
+
+<div class="main-wrapper">
+
+  <div class="left-content">
+
+    <form method="get" class="filters">
+      <label for="cinema">Кинотеатр:</label>
+      <select id="cinema" name="cinema" onchange="this.form.submit()">
+        <option value="">Все</option>
+        {% for c in cinemas %}
+          <option value="{{ c.id }}" {% if c.id|stringformat:"s" == selected_cinema|stringformat:"s" %}selected{% endif %}>{{ c.name_cinema }}</option>
+        {% endfor %}
+      </select>
+
+      <label for="date">Дата:</label>
+      <input type="date" id="date" name="date" value="{{ selected_date }}" onchange="this.form.submit()">
+
+      <label for="film">Фильм:</label>
+      <select id="film" name="film" onchange="this.form.submit()">
+        <option value="">Все</option>
+        {% for f in films %}
+          <option value="{{ f.id }}" {% if f.id|stringformat:"s" == selected_film|stringformat:"s" %}selected{% endif %}>{{ f.name }}</option>
+        {% endfor %}
+      </select>
+
+      <label for="hall">Зал:</label>
+      <select id="hall" name="hall" onchange="this.form.submit()">
+        <option value="">Все</option>
+        {% for h in halls %}
+          {% if not selected_cinema or h.cinema_id == selected_cinema %}
+            <option value="{{ h.id }}" {% if h.id|stringformat:"s" == selected_hall|stringformat:"s" %}selected{% endif %}>{{ h.name_hall_uk }}</option>
+          {% endif %}
+        {% endfor %}
+      </select>
+    </form>
+
+    <hr>
+
+    {% if sessions_by_date %}
+      {% for date, sessions in sessions_by_date %}
+        <div class="date-block">
+          <div><strong>{{ date|date:"d.m.Y" }}</strong></div>
+          <table>
+            <thead>
+              <tr>
+                <th>Время</th>
+                <th>Фильм</th>
+                <th>Зал</th>
+                <th>Цена</th>
+                <th>Бронировать</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for s in sessions %}
+                <tr>
+                  <td>{{ s.time_session|time:"H:i" }}</td>
+                  <td>{{ s.film.name }}</td>
+                  <td>{{ s.hall.name_hall_uk }}</td>
+                  <td>
+                    {% if s.price %}
+                      {{ s.price.price1 }} грн
+                    {% else %}
+                      -
+                    {% endif %}
+                  </td>
+                  <td>
+                    <a href="{% url 'booking_page' s.id %}">
+                      <button class="book-btn">Забронировать</button>
+                    </a>
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% endfor %}
+    {% else %}
+      <p>Сеансов не найдено.</p>
+    {% endif %}
+  </div>
+
+  <div class="right-banner">
+    <div class="ad-placeholder">Контекстная реклама</div>
+  </div>
+
+</div>
+
+{% endblock %}

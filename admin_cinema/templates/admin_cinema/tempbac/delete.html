@@ -1,0 +1,77 @@
+{% extends 'admin_base.html'%}
+{% load static %}
+{% block content%}
+<link rel="stylesheet" type="text/css" href="{% static 'css/style.css' %}">
+<h1 align="center">На главной верх</h1>
+<div class="wrapper">
+    {%for ls in list%}
+
+    {% if 'Главная' in ls.name_page %}
+      <div class="block1" align="center">
+        <form action="' method="POST" id="{{ls.id}}" enctype="multipart/form-data">
+          {% csrf_token%}
+           <p>  <img src="{{ls.image_main.url}}" alt="Баннер" width="100" height="100" border="1" vspace="50"></p>
+           <p><button type="submit" name="value3" form="{{ls.id}}">Удалить</button></p>
+<!--           <p> <label style="form-label" for="form.url_banner.id_for_label">{{form.url_banner.label}}</label> {{ls.url_banner}}</p>-->
+           <p> <label style="form-label" for="form.text_baner.id_for_label"></label> {{ls.text_banner}}</p>
+         </form>
+
+      </div>
+    {%endif%}
+    <p> &nbsp</p>
+    {%endfor%}
+    <div class="block2" align="center">
+       <form action="" method="POST" id="add" enctype="multipart/form-data">
+         {% csrf_token%}
+         <p>  <img src='{{url}}' alt="" width="100" height="100" border="2" vspace="50"></p>
+         <p><button type="submit" name="value1">Добавить</button></p>
+         <p> <label style="form-label" for="form.url_baner.id_for_label">{{form.url_banner.label}}</label> {{form.url_banner}}</p>
+           <div>{{form.url_banner.error}}</div>
+         <p> <label style="form-label" for="form.text_baner.id_for_label">{{form.text_banner.label}}</label> {{form.text_banner}}</p>
+         <p> <label style="form-label" for="form.image_main.id_for_label">{{form.image_main.label}}</label> {{form.image_main}}</p>
+         <div>{{form.image_main.error}}</div>
+           <!--         <p> <label style="form-label" for="form.speed.id_for_label">{{form.speed.label}}</label> {{form.speed}}</p>-->
+<!--          {{form.as_p }}-->
+       </form>
+    </div>
+    <div class="block3">
+      <p><button type="submit" form="add" name="add_form">Где оно</button></p>
+    </div>
+</div>
+<h1 align="center">Сквозной банер на заднем фоне</h1>
+<h1 align="center">На главной новости акции</h1>
+<div class="wrapper">
+    {%for ls in list%}
+
+    {% if 'Акция' in ls.name_page %}
+      <div class="block1" align="center">
+        <form action="" method="POST"  enctype="multipart/form-data">
+          {% csrf_token%}
+           <p>  <img src="{{ls.image_main.url}}" alt="Баннер" width="100" height="100" border="1" vspace="50"></p>
+           <p><button type="button" >Удалить</button></p>
+<!--           <p> <label style="form-label" for="form.url_baner.id_for_label">{{form.url_baner.label}}</label> {{ls.url_baner}}</p>-->
+           <p> <label style="form-label" for="form.text_baner.id_for_label"></label> {{ls.text_banner}}</p>
+         </form>
+      </div>
+    {%endif%}
+    <p> &nbsp</p>
+    {%endfor%}
+    <div class="block2" align="center">
+       <form action="" method="POST"  enctype="multipart/form-data">
+         {% csrf_token%}
+         <p>  <img src='{{url}}' alt="" width="100" height="100" border="2" vspace="50"></p>
+         <p><button type="submit" name="value2">Добавить</button></p>
+         <p> <label style="form-label" for="form.url_baner.id_for_label">{{form.url_banner.label}}</label> {{form.url_banner}}</p>
+         <p> <label style="form-label" for="form.text_baner.id_for_label">{{form.text_banner.label}}</label> {{form.text_banner}}</p>
+         <p> <label style="form-label" for="form.image_main.id_for_label">{{form.image_main.label}}</label> {{form.image_main}}</p>
+<!--         <p> <label style="form-label" for="form.speed.id_for_label">33</label> 33</p>-->
+     <!--     {{form.as_p }}-->
+       </form>
+    </div>
+    <div class="block3">
+      <p><button type="submit">Сохранить</button></p>
+    </div>
+</div>
+
+{% endblock %}
+

@@ -1,0 +1,57 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Django migrations
+cinema/migrations/
+!*/migrations/__init__.py
+
+# Environments
+.env
+.env.*
+
+# Database
+*.sqlite3
+
+# Virtualenv
+venv/
+env/
+ENV/
+.venv/
+.pipenv/
+
+# VSCode
+.vscode/
+
+# PyCharm
+.idea/
+
+# Logs
+*.log
+
+# Static files
+staticfiles/
+static/
+media/
+
+# Redis dumps
+dump.rdb
+
+# Celery beat schedule file
+celerybeat-schedule
+
+# Docker
+*.pid
+
+# Mac OS
+.DS_Store
+
+# Test reports
+htmlcov/
+.coverage
+
+# Node modules
+node_modules/
+package-lock.json
+yarn.lock
