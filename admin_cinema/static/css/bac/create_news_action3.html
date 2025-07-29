@@ -1,0 +1,327 @@
+{% extends 'admin_base.html' %}
+{% load static %}
+
+{% block content %}
+
+<h1>Добавить фильм</h1>
+
+<form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    {{ image_formset.management_form }}
+
+    <!-- Язык: радиокнопки справа сверху -->
+    <div style="display: flex; justify-content: flex-end; margin-bottom: 10px; gap: 20px;">
+        {% for radio in form.language %}
+        <label style="display: flex; align-items: center; gap: 5px; cursor: pointer;">
+            {{ radio.tag }} {{ radio.choice_label }}
+        </label>
+        {% endfor %}
+    </div>
+    <!-- Название и описание -->
+    <div id="uk-fields" class="lang-block" style="display: flex; align-items: center; gap: 20px;">
+        <div>
+            <p>
+                <label class="lang-label" data-uk="Назва (укр):" data-ru="Название (рус):">Назва (укр):</label>
+                {{ form.name_about_uk }}
+            </p>
+            <p>
+                <label class="lang-label" data-uk="Опис (укр):" data-ru="Описание (рус):">Опис (укр):</label>
+                {{ form.description_uk }}
+            </p>
+        </div>
+        <div style="display: flex; flex-direction: column; justify-content: center;">
+            <p>
+                <label class="lang-label" data-uk="Дата початку:" data-ru="Дата начала:" style="white-space: nowrap;">Дата
+                    начала:</label>
+                {{ form.date_publication }}
+            </p>
+        </div>
+    </div>
+
+    <div id="ru-fields" class="lang-block" style="display:none;">
+        <p>
+            <label class="lang-label" data-uk="Назва (укр):" data-ru="Название (рус):">Название (рус):</label>
+            {{ form.name_about_ru }}
+        </p>
+        <p>
+            <label class="lang-label" data-uk="Опис (укр):" data-ru="Описание (рус):">Описание (рус):</label>
+            {{ form.description_ru }}
+        </p>
+        <div style="display: flex; flex-direction: column; justify-content: center;">
+            <p>
+                <label class="lang-label" data-uk="Дата початку:" data-ru="Дата начала:" style="white-space: nowrap;">Дата
+                    начала:</label>
+                {{ form.date_publication }}
+            </p>
+        </div>
+    </div>
+
+    <!-- Главная картинка с превью и кнопками -->
+    <p><label class="lang-label" data-uk="Головне зображення:" data-ru="Главная картинка:">Главная картинка:</label></p>
+    <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 15px;">
+        <div style="width: 120px; height: 120px; background-color: #ccc; display: flex; justify-content: center; align-items: center; border: 1px solid #aaa;">
+            {% if form.instance.main_image %}
+            <img id="mainImagePreview" src="{{ form.instance.main_image.url }}"
+                 style="max-width: 100%; max-height: 100%;"/>
+            {% else %}
+            <img id="mainImagePreview" src="#" style="display:none; max-width: 100%; max-height: 100%;"/>
+            {% endif %}
+        </div>
+
+        <div style="display: flex; gap: 10px; align-items: center;">
+            {{ form.main_image }}
+            <button type="button" onclick="document.querySelector('input[name=main_image]').click()">Добавить</button>
+            <button type="button" onclick="removeMainImage()">Удалить</button>
+        </div>
+    </div>
+
+    <!-- Галерея -->
+    <h4 class="lang-label" data-uk="Галерея:" data-ru="Галерея:">Галерея:</h4>
+    <div id="galleryForms" style="display: flex; gap: 15px; overflow-x: auto; padding-bottom: 10px;">
+        {% for image_form in image_formset %}
+        <div class="gallery-form" style="position: relative; display: flex; flex-direction: column; align-items: center; gap: 5px;">
+            {{ image_form.id }}
+
+            <button type="button"
+                    style="position: absolute; top: 2px; right: 2px; background: #f00; color: #fff; border: none; border-radius: 50%; width: 20px; height: 20px; cursor: pointer; font-weight: bold; line-height: 18px; padding: 0;"
+                    onclick="removeGalleryImage(this)">
+                ×
+            </button>
+
+            <div style="width: 120px; height: 120px; background-color: #ccc; display: flex; justify-content: center; align-items: center; border: 1px solid #aaa;">
+                {% if image_form.instance.image %}
+                <img class="galleryPreview" src="{{ image_form.instance.image.url }}"
+                     style="max-width: 100%; max-height: 100%;"/>
+                {% else %}
+                <img class="galleryPreview" style="display: none; max-width: 100%; max-height: 100%;"/>
+                <span style="color: #666;">нет</span>
+                {% endif %}
+            </div>
+
+            {{ image_form.image }}
+            <button type="button" onclick="this.previousElementSibling.click()">Добавить</button>
+
+            {% if image_form.DELETE %}
+            <label style="display:none;">{{ image_form.DELETE }}</label>
+            {% endif %}
+        </div>
+        {% endfor %}
+        <button type="button" id="addGalleryFormBtn" class="add-button">+ Добавить форму</button>
+    </div>
+
+    <!-- Дата начала -->
+    <p>
+        <label class="lang-label" data-uk="Дата початку:" data-ru="Дата начала:">Дата начала:</label>
+        {{ form.date_publication}}
+    </p>
+
+    <!-- Трейлер и тип -->
+    <p>
+        <label class="lang-label" data-uk="Посилання на трейлер:" data-ru="Ссылка на трейлер:">Ссылка на трейлер:</label>
+        {{ form.video_url }}
+    </p>
+
+<!--    <p>-->
+<!--        <label class="lang-label" data-uk="Тип фільму:" data-ru="Тип кино:">Тип кино:</label>-->
+<!--    </p>-->
+<!--    <div style="display: flex; gap: 15px; align-items: center;">-->
+<!--        {% for checkbox in form.type_film %}-->
+<!--        <label style="display: flex; align-items: center; gap: 5px;">-->
+<!--            {{ checkbox.tag }} {{ checkbox.choice_label }}-->
+<!--        </label>-->
+<!--        {% endfor %}-->
+<!--    </div>-->
+
+    <!-- SEO -->
+    <h4>SEO</h4>
+    <div style="display: flex; flex-direction: column; gap: 10px; max-width: 400px;">
+        <p style="margin: 0;">
+            <label style="display: inline-block; width: 130px;">{{ seo_form.seo_url.label }}:</label>
+            {{ seo_form.seo_url }}
+        </p>
+        <p style="margin: 0;">
+            <label style="display: inline-block; width: 130px;">{{ seo_form.seo_title.label }}:</label>
+            {{ seo_form.seo_title }}
+        </p>
+        <p style="margin: 0;">
+            <label style="display: inline-block; width: 130px;">{{ seo_form.seo_keywords.label }}:</label>
+            {{ seo_form.seo_keywords }}
+        </p>
+        <p style="margin: 0;">
+            <label style="display: inline-block; width: 130px;">{{ seo_form.seo_description.label }}:</label>
+            {{ seo_form.seo_description }}
+        </p>
+    </div>
+
+    <!-- Кнопки -->
+    <button type="submit">Сохранить</button>
+
+</form>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    // Скрываем input[type=file] в галерее и добавляем onchange preview
+    const galleryInputs = document.querySelectorAll('#galleryForms input[type="file"]');
+    galleryInputs.forEach(function (input) {
+        input.style.display = 'none';
+        input.setAttribute('onchange', 'previewGalleryImage(this)');
+    });
+
+    // Обработка переключения языка
+    const languageRadios = document.querySelectorAll('input[name="language"]');
+
+    function updateLanguageLabels(lang) {
+        // Меняем текст меток
+        document.querySelectorAll('.lang-label').forEach(function (label) {
+            const newText = label.getAttribute('data-' + lang);
+            if (newText) {
+                label.textContent = newText;
+            }
+        });
+
+        // Показываем нужные поля для названия и описания
+        if (lang === 'uk') {
+            document.getElementById('uk-fields').style.display = 'block';
+            document.getElementById('ru-fields').style.display = 'none';
+        } else if (lang === 'ru') {
+            document.getElementById('uk-fields').style.display = 'none';
+            document.getElementById('ru-fields').style.display = 'block';
+        }
+    }
+
+    languageRadios.forEach(function (radio) {
+        radio.addEventListener('change', function () {
+            updateLanguageLabels(this.value);
+        });
+        if (radio.checked) {
+            updateLanguageLabels(radio.value);
+        }
+    });
+
+    // Добавление новой пустой формы в галерею
+    const addBtn = document.getElementById('addGalleryFormBtn');
+    const galleryFormsContainer = document.getElementById('galleryForms');
+
+    addBtn.addEventListener('click', function () {
+        const totalFormsInput = document.querySelector('input[name="form-TOTAL_FORMS"]');
+        let totalForms = parseInt(totalFormsInput.value);
+
+        const lastForm = galleryFormsContainer.querySelector('.gallery-form:last-of-type');
+        if (!lastForm) return;
+
+        // Клонируем последнюю форму
+        const newForm = lastForm.cloneNode(true);
+
+        // Чистим данные в клоне
+        newForm.querySelectorAll('input').forEach(function (input) {
+            if (input.type === 'file') {
+                input.value = '';
+            } else if (input.type === 'hidden') {
+                input.value = '';
+            } else if (input.type === 'checkbox') {
+                input.checked = false;
+            }
+        });
+
+        // Чистим превью
+        const img = newForm.querySelector('.galleryPreview');
+        if (img) {
+            img.src = '';
+            img.style.display = 'none';
+        }
+
+        // Обновляем имена и id полей для нового индекса
+        newForm.querySelectorAll('input, label').forEach(function (el) {
+            ['name', 'id', 'for'].forEach(function (attr) {
+                if (el.hasAttribute(attr)) {
+                    el.setAttribute(attr, el.getAttribute(attr).replace(/form-(\d)+/, 'form-' + totalForms));
+                }
+            });
+        });
+
+        // Удаляем поле DELETE, если есть
+        const deleteInput = newForm.querySelector('input[type=checkbox][name$="-DELETE"]');
+        if (deleteInput) {
+            deleteInput.checked = false;
+        }
+
+        // Вставляем новую форму перед кнопкой добавления
+        galleryFormsContainer.insertBefore(newForm, addBtn);
+
+        // Обновляем общее количество форм
+        totalFormsInput.value = totalForms + 1;
+
+        // Прячем input[type=file] новой формы и ставим onchange preview
+        const newFileInput = newForm.querySelector('input[type="file"]');
+        if (newFileInput) {
+            newFileInput.style.display = 'none';
+            newFileInput.setAttribute('onchange', 'previewGalleryImage(this)');
+        }
+    });
+});
+
+function previewGalleryImage(input) {
+    if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function (e) {
+            const img = input.parentNode.querySelector('.galleryPreview');
+            if (img) {
+                img.src = e.target.result;
+                img.style.display = 'block';
+            }
+        }
+        reader.readAsDataURL(input.files[0]);
+    }
+}
+
+function removeGalleryImage(button) {
+    const formDiv = button.closest('.gallery-form');
+    if (!formDiv) return;
+
+    // Помечаем форму на удаление, если есть поле DELETE
+    const deleteInput = formDiv.querySelector('input[type=checkbox][name$="-DELETE"]');
+    if (deleteInput) {
+        deleteInput.checked = true;
+        formDiv.style.display = 'none';
+    } else {
+        // Иначе просто удаляем форму из DOM и уменьшаем TOTAL_FORMS
+        formDiv.remove();
+        const totalFormsInput = document.querySelector('input[name="form-TOTAL_FORMS"]');
+        totalFormsInput.value = parseInt(totalFormsInput.value) - 1;
+    }
+}
+
+function removeMainImage() {
+    const mainInput = document.querySelector('input[name=main_image]');
+    if (!mainInput) return;
+    mainInput.value = '';
+    const preview = document.getElementById('mainImagePreview');
+    if (preview) {
+        preview.src = '#';
+        preview.style.display = 'none';
+    }
+}
+</script>
+<style>
+    .lang-label {
+        font-weight: bold;
+    }
+    .add-button {
+        background-color: #2d8cf0;
+        border: none;
+        color: white;
+        cursor: pointer;
+        font-weight: bold;
+        padding: 5px 10px;
+        border-radius: 4px;
+        height: 120px;
+    }
+</style>
+
+<!--<style>-->
+<!--input[type="file"] {-->
+<!--    display: none;-->
+<!--}-->
+<!--</style>-->
+
+{% endblock %}

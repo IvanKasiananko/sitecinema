@@ -1,0 +1,182 @@
+{% extends 'admin_base.html' %}
+{% load static %}
+
+{% block content %}
+
+<h1>Добавить фильм</h1>
+
+<form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    {{ image_formset.management_form }}
+
+    <!-- Язык -->
+    <div style="display: flex; justify-content: flex-end; margin-bottom: 10px; gap: 20px;">
+        {% for radio in form.language %}
+        <label style="display: flex; align-items: center; gap: 5px; cursor: pointer;">
+            {{ radio.tag }} {{ radio.choice_label }}
+        </label>
+        {% endfor %}
+    </div>
+
+    <!-- Название и описание -->
+    <div id="uk-fields">
+        <p><label>Назва (укр): </label>{{ form.name_uk }}</p>
+        <p><label>Опис (укр): </label>{{ form.description_uk }}</p>
+    </div>
+    <div id="ru-fields">
+        <p><label>Название (рус): </label>{{ form.name_ru }}</p>
+        <p><label>Описание (рус): </label>{{ form.description_ru }}</p>
+    </div>
+
+    <!-- Главная картинка -->
+    <p><label>Главная картинка:</label></p>
+    <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 15px;">
+        <div style="width: 120px; height: 120px; background-color: #ccc; display: flex; justify-content: center; align-items: center; border: 1px solid #aaa;">
+            <img id="mainImagePreview"
+                 src="{% if form.instance.main_image %}{{ form.instance.main_image.url }}{% else %}#{% endif %}"
+                 style="{% if not form.instance.main_image %}display:none;{% endif %} max-width: 100%; max-height: 100%;" />
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 5px;">
+            <label for="id_main_image" class="custom-upload-button" style="cursor:pointer; padding: 5px 10px; background: #007bff; color: white; border-radius: 4px; text-align: center;">Загрузить изображение</label>
+            {{ form.main_image }}
+            <button type="button" onclick="removeMainImage()">Удалить</button>
+        </div>
+    </div>
+
+    <!-- Галерея -->
+    <h4>Галерея:</h4>
+    <div id="galleryForms" style="display: flex; gap: 15px; overflow-x: auto; padding-bottom: 10px;">
+        {% for image_form in image_formset %}
+        <div style="position: relative; display: flex; flex-direction: column; align-items: center; gap: 5px;">
+            {{ image_form.id }}
+            <button type="button"
+                    style="position: absolute; top: 2px; right: 2px; background: #f00; color: #fff; border: none; border-radius: 50%; width: 20px; height: 20px; cursor: pointer; font-weight: bold; line-height: 18px; padding: 0;"
+                    onclick="removeGalleryImage(this)">
+                ×
+            </button>
+
+            <div style="width: 120px; height: 120px; background-color: #ccc; display: flex; justify-content: center; align-items: center; border: 1px solid #aaa;">
+                {% if image_form.instance.image %}
+                <img class="galleryPreview" src="{{ image_form.instance.image.url }}"
+                     style="max-width: 100%; max-height: 100%;"/>
+                {% else %}
+                <img class="galleryPreview" style="display: none; max-width: 100%; max-height: 100%;"/>
+                <span style="color: #666;">нет</span>
+                {% endif %}
+            </div>
+
+            {{ image_form.image }}
+            <button type="button" onclick="this.previousElementSibling.click()">Добавить</button>
+
+            {% if image_form.DELETE %}
+            <label>{{ image_form.DELETE }}</label>
+            {% endif %}
+        </div>
+        {% endfor %}
+        <button type="button" onclick="addForm('main')" class="add-button">+ Добавить форму</button>
+    </div>
+
+    <!-- Дата начала -->
+    <p><label>Дата начала: </label>{{ form.start_date }}</p>
+
+    <!-- Трейлер -->
+    <p><label>Ссылка на трейлер: </label>{{ form.treiler_url }}</p>
+
+    <!-- Тип фильма -->
+    <p><label>Тип кино:</label>
+    <div style="display: flex; gap: 15px; align-items: center;">
+        {% for checkbox in form.type_film %}
+        <label style="display: flex; align-items: center; gap: 5px;">
+            {{ checkbox.tag }} {{ checkbox.choice_label }}
+        </label>
+        {% endfor %}
+    </div>
+    </p>
+
+    <!-- SEO -->
+    <h4>SEO</h4>
+    <div style="display: flex; flex-direction: column; gap: 10px; max-width: 400px;">
+        <p style="margin: 0;"><label style="width: 130px; display: inline-block;">{{ seo_form.seo_url.label }}:</label> {{ seo_form.seo_url }}</p>
+        <p style="margin: 0;"><label style="width: 130px; display: inline-block;">{{ seo_form.seo_title.label }}:</label> {{ seo_form.seo_title }}</p>
+        <p style="margin: 0;"><label style="width: 130px; display: inline-block;">{{ seo_form.seo_keywords.label }}:</label> {{ seo_form.seo_keywords }}</p>
+        <p style="margin: 0;"><label style="width: 130px; display: inline-block;">{{ seo_form.seo_description.label }}:</label> {{ seo_form.seo_description }}</p>
+    </div>
+
+    <br>
+    <button type="submit">Сохранить</button>
+    <button type="button">Вернуть базовую версию</button>
+</form>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Скрытие input file в галерее
+    document.querySelectorAll('#galleryForms input[type="file"]').forEach(input => {
+        input.style.display = 'none';
+        input.setAttribute('onchange', 'previewGalleryImage(this)');
+    });
+
+    // Языковые переключатели
+    function toggleLanguageFields(lang) {
+        document.getElementById('uk-fields').style.display = (lang === 'uk') ? 'block' : 'none';
+        document.getElementById('ru-fields').style.display = (lang === 'ru') ? 'block' : 'none';
+    }
+
+    document.querySelectorAll('input[name="language"]').forEach(radio => {
+        radio.addEventListener('change', () => toggleLanguageFields(radio.value));
+        if (radio.checked) toggleLanguageFields(radio.value);
+    });
+
+    // Скрытие input main_image
+    const mainInput = document.getElementById("id_main_image");
+    if (mainInput) {
+        mainInput.style.display = "none";
+        mainInput.addEventListener('change', previewMainImage);
+    }
+});
+
+function previewMainImage() {
+    const input = document.getElementById('id_main_image');
+    const preview = document.getElementById('mainImagePreview');
+    if (input.files && input.files[0]) {
+        preview.src = URL.createObjectURL(input.files[0]);
+        preview.style.display = 'block';
+    }
+}
+
+function removeMainImage() {
+    const input = document.getElementById('id_main_image');
+    const preview = document.getElementById('mainImagePreview');
+    input.value = '';
+    preview.src = '#';
+    preview.style.display = 'none';
+}
+
+function previewGalleryImage(input) {
+    const container = input.parentElement.querySelector('div');
+    const img = container.querySelector('img.galleryPreview');
+    const span = container.querySelector('span');
+    if (input.files && input.files[0]) {
+        img.src = URL.createObjectURL(input.files[0]);
+        img.style.display = 'block';
+        if (span) span.style.display = 'none';
+    }
+}
+
+function removeGalleryImage(button) {
+    const container = button.parentElement;
+    const inputFile = container.querySelector('input[type="file"]');
+    const img = container.querySelector('img.galleryPreview');
+    const span = container.querySelector('span');
+    const deleteInput = container.querySelector('input[type="checkbox"][name$="-DELETE"]');
+    if (deleteInput) deleteInput.checked = true;
+    if (inputFile) inputFile.value = '';
+    if (img) {
+        img.src = '#';
+        img.style.display = 'none';
+    }
+    if (span) span.style.display = 'inline';
+}
+</script>
+
+{% endblock %}
